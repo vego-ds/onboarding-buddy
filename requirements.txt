@@ -1,0 +1,14 @@
+email-validator
+fastapi
+uvicorn
+streamlit
+pydantic
+pydantic-settings
+python-dotenv
+langgraph
+langchain
+langchain-core
+langchain-openai
+chromadb
+requests
+pytest
