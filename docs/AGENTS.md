@@ -113,11 +113,12 @@ The Supervisor Agent is like the class teacher. It does not do every student’s
 
 Specialist agents perform focused jobs.
 
-The MVP includes:
+The current Phase 1 implementation includes:
 
 - Intake Agent
-- Policy and Knowledge Agent
 - Task Planning Agent
+
+The Policy and Knowledge Agent is part of the MVP design target, but it is not implemented in the current Phase 1 code path yet. The current workflow routes from Supervisor to Intake to Task Planning, with fallback task templates when the LLM provider is unavailable or returns invalid task output.
 
 Phase 2 adds:
 

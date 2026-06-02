@@ -4,6 +4,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# Frontend
+node_modules/
+dist/
+build/
 # Environment variables and secrets
 .env
 

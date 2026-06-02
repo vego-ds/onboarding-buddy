@@ -1,5 +1,4 @@
-import json
-
+from agents.shared.json_utils import parse_json_object
 from agents.task_planning.prompts import (
     TASK_PLANNING_SYSTEM_PROMPT,
     build_task_planning_user_prompt,
@@ -9,6 +8,10 @@ from database.repositories.task_repository import (
     get_tasks_by_employee_id,
 )
 from llm.openrouter_client import call_openrouter
+
+ALLOWED_PRIORITIES = {"Low", "Medium", "High"}
+ALLOWED_OWNERS = {"HR", "IT", "Manager", "Employee"}
+EXPECTED_TASK_COUNT = 6
 
 
 def build_default_tasks(state):
@@ -74,18 +77,52 @@ def build_default_tasks(state):
 
 
 def normalize_llm_tasks(tasks):
-    normalized_tasks = []
+    if not isinstance(tasks, list):
+        raise ValueError("Task Planning LLM returned tasks in an invalid format.")
 
-    for task in tasks:
+    if len(tasks) != EXPECTED_TASK_COUNT:
+        raise ValueError(
+            f"Task Planning LLM returned {len(tasks)} tasks. Expected {EXPECTED_TASK_COUNT}."
+        )
+
+    normalized_tasks = []
+    seen_task_names = set()
+
+    for index, task in enumerate(tasks, start=1):
+        if not isinstance(task, dict):
+            raise ValueError(f"Task {index} is not a valid object.")
+
+        task_name = str(task.get("task_name", "")).strip()
+        task_description = str(task.get("task_description", "")).strip()
+        task_priority = str(task.get("task_priority", "Medium")).strip().title()
+        assigned_owner = str(task.get("assigned_owner", "HR")).strip()
+
+        if not task_name:
+            raise ValueError(f"Task {index} is missing task_name.")
+
+        if task_name.lower() in seen_task_names:
+            raise ValueError(f"Task Planning LLM returned duplicate task: {task_name}")
+
+        if task_priority not in ALLOWED_PRIORITIES:
+            raise ValueError(f"Task {index} has invalid priority: {task_priority}")
+
+        if assigned_owner not in ALLOWED_OWNERS:
+            raise ValueError(f"Task {index} has invalid owner: {assigned_owner}")
+
+        approval_required = task.get("approval_required", False)
+        if not isinstance(approval_required, bool):
+            raise ValueError(f"Task {index} has invalid approval_required value.")
+
+        seen_task_names.add(task_name.lower())
         normalized_tasks.append(
             {
-                "task_name": task.get("task_name", "Untitled onboarding task"),
-                "task_description": task.get("task_description", ""),
+                "task_name": task_name,
+                "task_description": task_description,
                 "task_status": "Pending",
-                "task_priority": task.get("task_priority", "Medium"),
-                "approval_required": bool(task.get("approval_required", False)),
+                "task_priority": task_priority,
+                "approval_required": approval_required,
                 "generated_by_agent": "task_planning_agent",
-                "assigned_owner": task.get("assigned_owner", "HR"),
+                "assigned_owner": assigned_owner,
             }
         )
 
@@ -106,7 +143,7 @@ def generate_tasks_with_llm(state):
     if not raw_response:
         raise ValueError("Task Planning LLM returned empty response.")
 
-    parsed_response = json.loads(raw_response)
+    parsed_response = parse_json_object(raw_response)
     tasks = parsed_response.get("tasks", [])
 
     if not tasks:
@@ -122,6 +159,21 @@ def run_task_planning_agent(state):
             "workflow_status": "FAILED",
             "failure_reason": "Cannot generate tasks before employee validation.",
             "current_agent": "task_planning_agent",
+            "agent_outputs": {
+                **state.get("agent_outputs", {}),
+                "task_planning_agent": {
+                    "status": "failed",
+                    "message": "Cannot generate tasks before employee validation.",
+                },
+            },
+            "agent_execution_history": state.get("agent_execution_history", [])
+            + [
+                {
+                    "agent": "task_planning_agent",
+                    "status": "failed",
+                    "summary": "Task planning blocked because employee validation was missing.",
+                }
+            ],
         }
 
     existing_tasks = get_tasks_by_employee_id(state["employee_id"])

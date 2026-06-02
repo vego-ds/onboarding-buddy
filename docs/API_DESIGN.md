@@ -53,7 +53,10 @@ http://localhost:8000
 | Method | Endpoint                                          | Purpose                                       |
 | ------ | ------------------------------------------------- | --------------------------------------------- |
 | POST   | /employees                                        | Create employee onboarding record             |
+| GET    | /employees                                        | List recent employee onboarding records       |
 | GET    | /employees/{employee_id}                          | Get employee details                          |
+| PUT    | /employees/{employee_id}                          | Edit employee onboarding details              |
+| GET    | /employees/{employee_id}/tasks                    | Get generated onboarding tasks                |
 | POST   | /employees/{employee_id}/generate-onboarding-plan | Trigger Supervisor Agent workflow             |
 | POST   | /employees/{employee_id}/generate-checklist       | Generate onboarding checklist                 |
 | POST   | /employees/{employee_id}/generate-email-draft     | Generate welcome email draft                  |
@@ -65,6 +68,8 @@ http://localhost:8000
 | GET    | /agent-runs                                       | Get agent execution history                   |
 | GET    | /employees/{employee_id}/agent-runs               | Get employee-specific agent execution history |
 | GET    | /workflow-runs/{workflow_run_id}                  | Get workflow run details                      |
+
+Current Phase 1 implementation supports `POST /employees`, `GET /employees`, `GET /employees/{employee_id}`, `PUT /employees/{employee_id}`, `GET /employees/{employee_id}/tasks`, and `POST /employees/{employee_id}/generate-onboarding-plan`. The other endpoints remain roadmap items for approvals, workflow observability, and task status operations.
 
 ---
 

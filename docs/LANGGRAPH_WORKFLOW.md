@@ -61,14 +61,29 @@ over:
 
 The workflow uses one Supervisor Agent and a small set of specialist agents.
 
-### MVP Agents
+### Current Phase 1 Agents
 
 | Agent                      | Purpose                                           |
 | -------------------------- | ------------------------------------------------- |
 | Supervisor Agent           | Coordinates routing and workflow execution        |
 | Intake Agent               | Validates employee onboarding information         |
-| Policy and Knowledge Agent | Retrieves policy context and onboarding templates |
 | Task Planning Agent        | Generates onboarding checklist and task plan      |
+
+The Policy and Knowledge Agent remains in the design roadmap, but it is not currently wired into the LangGraph implementation. The implemented Phase 1 graph is:
+
+```text
+Supervisor Agent
+↓
+Intake Agent
+↓
+Supervisor Agent
+↓
+Task Planning Agent
+↓
+Supervisor Agent
+↓
+Complete
+```
 
 ### Deferred Phase 2 Agents
 

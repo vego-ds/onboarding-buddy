@@ -9,6 +9,14 @@ class EmployeeCreateRequest(BaseModel):
     joining_date: str
 
 
+class EmployeeUpdateRequest(BaseModel):
+    employee_name: str
+    employee_email: EmailStr
+    role: str
+    department: str
+    joining_date: str
+
+
 class EmployeeResponse(BaseModel):
     employee_id: str
     employee_name: str

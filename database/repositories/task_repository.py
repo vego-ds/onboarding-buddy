@@ -67,6 +67,6 @@ def get_tasks_by_employee_id(employee_id):
     """
 
     with get_connection() as connection:
-        rows = connection.execute(query, (employee_id,)).fetchall()
+        rows = connection.execute(query, (employee_id.upper(),)).fetchall()
 
     return [dict(row) for row in rows]

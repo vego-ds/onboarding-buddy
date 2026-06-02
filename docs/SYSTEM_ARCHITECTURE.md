@@ -4,7 +4,7 @@
 
 Onboarding Buddy follows a layered, supervisor-based multi-agent architecture.
 
-The system is designed around one central orchestration agent and multiple specialist agents.
+The system is designed around one central orchestration agent and focused specialist agents.
 
 ```text
 HR User
@@ -19,12 +19,12 @@ Supervisor Agent
 ↓
 Specialist Agents
 ↓
-Tool Layer + Memory Layer
+Repository Layer
 ↓
-SQLite Database + ChromaDB Memory + Monitoring
+SQLite Database
 ```
 
-The Supervisor Agent coordinates the onboarding workflow. Specialist agents perform focused jobs such as validating employee information, retrieving policy knowledge, and generating onboarding tasks.
+The Supervisor Agent coordinates the onboarding workflow. In the current Phase 1 implementation, specialist agents validate employee information and generate onboarding tasks.
 
 This architecture avoids putting all responsibilities into one large AI agent. Instead, the system separates work into smaller, easier-to-debug agent roles.
 
@@ -41,10 +41,8 @@ It allows HR users to:
 * enter employee details
 * generate onboarding workflows
 * review onboarding tasks
-* approve AI-generated actions
 * monitor onboarding progress
-* inspect agent activity logs
-* view workflow failures and retry states
+* inspect workflow details returned from the backend
 
 The frontend does not directly call agents. It communicates only with the FastAPI backend.
 
@@ -60,7 +58,6 @@ It handles:
 * input validation
 * workflow triggers
 * database writes
-* approval decisions
 * dashboard data retrieval
 * communication with the LangGraph orchestration layer
 
@@ -77,12 +74,7 @@ LangGraph manages:
 * workflow state
 * agent routing
 * execution order
-* retries
-* approval pauses
-* tool execution
 * failure routing
-* audit logging
-* monitoring traces
 
 LangGraph is used because onboarding is not just one prompt and one response. It is a stateful workflow with multiple steps, decisions, approvals, and failures.
 
@@ -103,29 +95,22 @@ The Supervisor Agent is responsible for:
 * checking whether required data is missing
 * coordinating task generation
 * collecting specialist outputs
-* deciding when human approval is required
 * updating workflow state
 * routing failures to safe handling paths
 * producing final workflow summaries
-
-Simple explanation:
-
-The Supervisor Agent is like the class teacher. It does not do every student’s homework. It gives the right work to the right student, checks the result, and keeps the class organized.
-
----
 
 ### Specialist Agent Layer
 
 Specialist agents perform focused jobs.
 
-The MVP includes:
+Current Phase 1 includes:
 
 * Intake Agent
-* Policy and Knowledge Agent
 * Task Planning Agent
 
-Phase 2 adds:
+Roadmap agents include:
 
+* Policy and Knowledge Agent
 * Calendar Agent
 * Manager Follow-up Agent
 
@@ -153,7 +138,7 @@ If HR forgets to enter the joining date, the Intake Agent flags the missing fiel
 
 ### Policy and Knowledge Agent
 
-The Policy and Knowledge Agent retrieves onboarding knowledge.
+The Policy and Knowledge Agent is a roadmap item for policy-grounded task planning.
 
 It is responsible for:
 
@@ -164,7 +149,7 @@ It is responsible for:
 * answering onboarding-related questions
 * grounding generated outputs in stored knowledge
 
-For the MVP, this agent can use static templates and ChromaDB memory. In future versions, it can connect to real HR policy documents.
+In future versions, it can use static templates, ChromaDB memory, or real HR policy documents.
 
 ---
 
@@ -229,7 +214,6 @@ The OpenRouter layer supports:
 * supervisor reasoning
 * specialist agent responses
 * onboarding checklist generation
-* welcome email drafting
 * task recommendations
 * agent decision summaries
 * structured workflow outputs
@@ -246,9 +230,9 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 
 ### Tool Layer
 
-The tool layer contains controlled functions used by the multi-agent workflow.
+The tool layer is a roadmap layer for controlled actions used by the multi-agent workflow.
 
-In Version 1, tools are simulated instead of using real enterprise integrations.
+In the current Phase 1 code, task persistence is handled through repositories. Real controlled tools remain planned for future phases.
 
 Planned tools:
 
@@ -260,7 +244,7 @@ Planned tools:
 * Calendar Simulation Tool
 * Notification Simulation Tool
 
-Agents do not directly modify the database without controlled tool logic. Tools protect the system from unsafe or unvalidated actions.
+Future controlled tools will protect the system from unsafe or unvalidated actions.
 
 ---
 
@@ -272,13 +256,11 @@ It stores:
 
 * employee records
 * onboarding tasks
-* approvals
-* audit logs
-* agent runs
-* workflow state
-* retry metadata
-* provider metadata
-* model metadata
+* approval records
+* audit log records
+* workflow metadata tables
+
+The current Phase 1 code actively uses employee and onboarding task records. The remaining tables are schema groundwork for later workflow observability and approval features.
 
 ChromaDB may be used for vector memory, including:
 
@@ -291,15 +273,13 @@ ChromaDB may be used for vector memory, including:
 
 ### Monitoring Layer
 
-Monitoring includes:
+Current monitoring includes:
 
 * Python backend logs
-* SQLite audit logs
-* LangSmith traces
-* agent execution records
 * supervisor routing history
 * specialist agent results
-* OpenRouter request metadata
+
+Roadmap monitoring includes SQLite audit logs, persisted agent runs, workflow state snapshots, and optional tracing.
 
 Monitoring is critical because multi-agent systems need clear visibility. Developers must be able to answer:
 
@@ -307,7 +287,6 @@ Monitoring is critical because multi-agent systems need clear visibility. Develo
 * Why was that agent selected?
 * What did the agent return?
 * Did the output pass validation?
-* Did the tool execute successfully?
 * Where did the workflow fail?
 
 ---
@@ -323,20 +302,19 @@ The system uses:
 ```text
 1 Supervisor Agent
 +
-3 MVP Specialist Agents
+2 Phase 1 Specialist Agents
 ```
 
 This gives the project strong architecture while keeping implementation realistic.
 
 ---
 
-### MVP Agents
+### Current Phase 1 Agents
 
 | Agent                      | Purpose                                      |
 | -------------------------- | -------------------------------------------- |
 | Supervisor Agent           | Routes and coordinates the workflow          |
 | Intake Agent               | Validates employee onboarding data           |
-| Policy and Knowledge Agent | Retrieves policy and onboarding knowledge    |
 | Task Planning Agent        | Generates onboarding checklist and task plan |
 
 ---
@@ -383,16 +361,11 @@ Once that works, Phase 2 can add more operational agents.
 5. The Supervisor Agent reads the workflow state.
 6. The Supervisor Agent routes the workflow to the Intake Agent.
 7. The Intake Agent validates employee information.
-8. The Supervisor Agent routes policy-related work to the Policy and Knowledge Agent.
-9. The Policy and Knowledge Agent retrieves onboarding context.
-10. The Supervisor Agent routes planning work to the Task Planning Agent.
-11. The Task Planning Agent generates onboarding tasks.
-12. Generated tasks are validated and saved in SQLite.
-13. The system generates a welcome email draft.
-14. HR reviews and approves or rejects actions.
-15. Approved actions are executed through simulated tools.
-16. Every important action is logged.
-17. The dashboard displays onboarding progress, pending approvals, completed tasks, failed actions, and agent activity.
+8. The Supervisor Agent routes planning work to the Task Planning Agent.
+9. The Task Planning Agent generates or falls back to six onboarding tasks.
+10. Generated tasks are validated and saved in SQLite.
+11. The employee onboarding status updates to `PLAN_READY`.
+12. The dashboard displays onboarding progress, task metrics, task owners, priorities, approval flags, and workflow details.
 
 ---
 

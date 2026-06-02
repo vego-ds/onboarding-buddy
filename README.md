@@ -1,671 +1,185 @@
 # Onboarding Buddy
 
-Onboarding Buddy is a supervisor-based multi-agent onboarding workflow platform that helps HR teams automate employee onboarding using LangGraph orchestration, configurable LLM routing through OpenRouter, human approvals, controlled tool execution, persistent workflow state, and production-grade observability.
+Onboarding Buddy is a Phase 1 AI workflow product for employee onboarding. It combines a Streamlit dashboard, FastAPI backend, SQLite persistence, and a LangGraph supervisor workflow to create employee records, generate onboarding task plans, and review task status from a usable HR operations interface.
 
-The platform is designed around:
+The project is intentionally scoped as a controlled onboarding workflow, not an unrestricted autonomous agent.
 
-* multi-agent orchestration
-* workflow reliability
-* safe AI execution
-* provider flexibility
-* auditability
-* human-in-the-loop operations
-* enterprise-inspired onboarding workflows
+## Current Phase 1 Scope
 
----
+- Create employee onboarding records
+- List recent employees in a dashboard
+- Generate onboarding plans through a supervisor-controlled LangGraph flow
+- Validate employee profile data with an Intake Agent
+- Generate structured onboarding tasks with a Task Planning Agent
+- Fall back to deterministic default tasks when LLM generation fails
+- View generated tasks, owners, priorities, approval flags, and task metrics
+- Track employee onboarding lifecycle status such as `PENDING`, `PLAN_READY`, and `FAILED`
 
-# 1. Problem Statement
+## Tech Stack
 
-HR teams spend significant time managing repetitive onboarding tasks such as:
+- Frontend: Streamlit
+- Backend: FastAPI
+- Workflow orchestration: LangGraph
+- LLM provider: OpenRouter
+- Database: SQLite
+- Validation: Pydantic
+- Tests: pytest
 
-* creating onboarding checklists
-* sending welcome emails
-* collecting documents
-* scheduling orientation
-* notifying managers
-* tracking onboarding progress
-
-Manual onboarding workflows often create:
-
-* delays
-* inconsistent onboarding experiences
-* missed onboarding steps
-* low visibility into onboarding progress
-* repetitive HR operations
-
-Onboarding Buddy addresses these challenges through a supervisor-based multi-agent workflow system that coordinates onboarding planning, approval handling, workflow state management, task tracking, and observability.
-
----
-
-# 2. Product Vision
-
-Onboarding Buddy aims to become an intelligent onboarding operations platform that reduces repetitive HR workload, improves onboarding consistency, and creates a better employee onboarding experience through safe, observable, and modular multi-agent workflow automation.
-
----
-
-# 3. Core Architecture Philosophy
-
-The platform is intentionally designed as:
-
-```text
-Human-supervised multi-agent orchestration
-```
-
-not:
-
-```text
-fully autonomous AI execution
-```
-
-The architecture prioritizes:
-
-* supervisor-controlled orchestration
-* specialist agent isolation
-* workflow observability
-* approval-driven execution
-* safe workflow automation
-* persistent workflow state
-* deterministic routing
-* modular architecture
-
-The system intentionally avoids:
-
-* uncontrolled autonomous execution
-* unrestricted tool access
-* hidden workflow behavior
-* excessive agent complexity
-* provider-specific workflow coupling
-
----
-
-# 4. Multi-Agent Architecture
-
-The platform uses a supervisor-based multi-agent architecture.
-
-The Supervisor Agent coordinates onboarding workflows and routes work to focused specialist agents.
-
----
-
-## MVP Agents
-
-| Agent                      | Responsibility                                 |
-| -------------------------- | ---------------------------------------------- |
-| Supervisor Agent           | Coordinates workflow routing and orchestration |
-| Intake Agent               | Validates employee onboarding information      |
-| Policy and Knowledge Agent | Retrieves onboarding policies and templates    |
-| Task Planning Agent        | Generates onboarding checklist and task plans  |
-
----
-
-## Deferred Phase 2 Agents
-
-| Agent                   | Responsibility                         |
-| ----------------------- | -------------------------------------- |
-| Calendar Agent          | Schedules onboarding meetings          |
-| Manager Follow-up Agent | Sends manager reminders and follow-ups |
-
-The MVP intentionally limits the number of agents to keep workflow execution reliable, maintainable, and observable.
-
----
-
-# 5. Key Features
-
-* Employee onboarding form
-* Supervisor-based multi-agent orchestration
-* AI-generated onboarding checklist
-* AI-generated welcome email draft
-* Human-in-the-loop approval system
-* Task status tracking
-* Workflow state persistence
-* Agent execution tracking
-* Supervisor routing visibility
-* Simulated tool execution
-* Audit logging
-* Workflow monitoring
-* LangGraph orchestration
-* OpenRouter-based configurable model routing
-* Structured workflow validation
-* Retry-safe workflow execution
-
----
-
-# 6. Multi-Agent Workflow Overview
-
-```text
-HR Creates Employee Record
-↓
-Supervisor Agent Starts Workflow
-↓
-Supervisor Routes To Intake Agent
-↓
-Intake Agent Validates Employee Data
-↓
-Supervisor Routes To Policy & Knowledge Agent
-↓
-Policy Agent Retrieves Onboarding Context
-↓
-Supervisor Routes To Task Planning Agent
-↓
-Task Planning Agent Generates Checklist
-↓
-Supervisor Validates Outputs
-↓
-Tasks Saved To Database
-↓
-Welcome Email Generated
-↓
-HR Reviews Generated Content
-↓
-HR Approves or Rejects Actions
-↓
-Approved Tools Execute
-↓
-Workflow Logs Written
-↓
-Workflow Completes
-```
-
----
-
-# 7. System Architecture
+## Architecture
 
 ```text
 HR User
-↓
+  |
+  v
 Streamlit Frontend
-↓
+  |
+  v
 FastAPI Backend
-↓
-LangGraph Multi-Agent Orchestration
-↓
+  |
+  v
+LangGraph Workflow
+  |
+  v
 Supervisor Agent
-↓
-┌──────────────────────────────┐
-│      Specialist Agents       │
-│                              │
-│  - Intake Agent              │
-│  - Policy & Knowledge Agent  │
-│  - Task Planning Agent       │
-└──────────────────────────────┘
-↓
-Shared Tools + Shared Memory
-↓
-SQLite Database + ChromaDB + Monitoring
-↓
-OpenRouter Provider Layer
+  |
+  +--> Intake Agent
+  |
+  +--> Task Planning Agent
+  |
+  v
+SQLite Database
 ```
 
----
+The Supervisor Agent owns routing decisions. Specialist agents only perform focused tasks and communicate through structured workflow state.
 
-# 8. Workflow Capabilities
-
-The workflow system can:
-
-* validate employee onboarding data
-* retrieve onboarding templates
-* retrieve onboarding policy context
-* generate onboarding task plans
-* generate welcome email drafts
-* validate generated outputs
-* pause safely for HR approval
-* execute approved actions through controlled tools
-* persist workflow state
-* retry failed workflow steps safely
-* preserve routing metadata
-* track specialist agent execution history
-* preserve provider and model metadata for debugging
-
-The workflow is intentionally designed as a controlled orchestration system rather than an unrestricted autonomous AI system.
-
----
-
-# 9. Human-In-The-Loop Design
-
-Sensitive onboarding actions require HR approval before execution.
-
-Examples include:
-
-* sending official onboarding emails
-* requesting sensitive employee documents
-* triggering manager notifications
-* marking onboarding as completed
-* creating access-related tasks
-
-This improves:
-
-* safety
-* accountability
-* auditability
-* trust
-* workflow reliability
-
-The workflow must never bypass approval requirements.
-
----
-
-# 10. Guardrails and Failure Protection
-
-The platform includes multiple guardrails to prevent unsafe, incorrect, or untraceable workflow execution.
-
-Core guardrails include:
-
-* human approval before sensitive actions
-* supervisor-controlled routing
-* structured validation of agent outputs
-* controlled tool execution
-* persisted workflow state
-* finite retry limits
-* audit logging
-* routing visibility
-* provider metadata tracking
-* failure escalation to manual review
-* environment-based secret management
-
----
-
-## Failure Handling Lifecycle
+## Workflow
 
 ```text
-Failure Detected
-↓
-Capture Failure Context
-↓
-Write Audit Log
-↓
-Update Workflow State
-↓
-Retry If Recoverable
-↓
-Escalate If Retry Limit Reached
-↓
-Require Manual Review
+Create Employee
+  |
+  v
+Supervisor routes to Intake Agent
+  |
+  v
+Intake validates employee profile
+  |
+  v
+Supervisor routes to Task Planning Agent
+  |
+  v
+Task Planning Agent generates or falls back to 6 onboarding tasks
+  |
+  v
+Tasks are saved to SQLite
+  |
+  v
+Employee status updates to PLAN_READY
 ```
 
-The workflow should never silently continue after critical failures.
+## Implemented API Endpoints
 
----
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Backend health check |
+| `POST` | `/employees` | Create employee onboarding record |
+| `GET` | `/employees` | List recent employee records |
+| `GET` | `/employees/{employee_id}` | Get one employee |
+| `PUT` | `/employees/{employee_id}` | Edit employee onboarding details |
+| `POST` | `/employees/{employee_id}/generate-onboarding-plan` | Run onboarding workflow |
+| `GET` | `/employees/{employee_id}/tasks` | Get generated onboarding tasks |
 
-# 11. Observability
-
-The platform prioritizes workflow observability.
-
-The system tracks:
-
-* workflow execution
-* supervisor routing decisions
-* specialist agent execution
-* retry activity
-* approval states
-* tool execution results
-* provider request failures
-* workflow failures
-* workflow completion history
-* configured model metadata
-
----
-
-## Example Observable Events
-
-* Supervisor Agent routed workflow to Intake Agent.
-* Intake Agent detected missing joining date.
-* Policy and Knowledge Agent retrieved onboarding template.
-* Task Planning Agent generated onboarding checklist.
-* Tool execution failed during orientation scheduling.
-* OpenRouter request failed and retry was triggered.
-
----
-
-## Observability Stack
-
-| Component                  | Purpose                     |
-| -------------------------- | --------------------------- |
-| Python logging             | Backend logs                |
-| SQLite audit logs          | Workflow activity history   |
-| LangSmith                  | LangGraph execution tracing |
-| Agent execution history    | Specialist agent visibility |
-| OpenRouter metadata        | Provider observability      |
-| Workflow state persistence | Workflow recovery           |
-
-Observability is considered a mandatory infrastructure layer.
-
----
-
-# 12. Tech Stack
-
-| Layer                     | Technology                                 |
-| ------------------------- | ------------------------------------------ |
-| Frontend                  | Streamlit                                  |
-| Backend                   | FastAPI                                    |
-| Multi-Agent Orchestration | LangGraph                                  |
-| Supervisor Routing        | Custom LangGraph routing                   |
-| LLM Provider              | OpenRouter                                 |
-| LLM Models                | Configurable through environment variables |
-| Database                  | SQLite                                     |
-| Vector Memory             | ChromaDB                                   |
-| Monitoring                | Python logging, LangSmith, audit logs      |
-| Validation                | Pydantic                                   |
-| Workflow Persistence      | SQLite workflow state tables               |
-
----
-
-# 13. Repository Structure
-
-```text
-onboarding-buddy/
-│
-├── frontend/
-├── backend/
-├── agents/
-│   ├── supervisor/
-│   ├── intake/
-│   ├── policy/
-│   ├── task_planning/
-│   ├── knowledge/
-│   ├── calendar/
-│   ├── manager/
-│   ├── shared/
-│   └── workflow/
-│
-├── llm/
-├── tools/
-├── database/
-├── memory/
-├── monitoring/
-├── schemas/
-├── tests/
-├── docs/
-├── logs/
-│
-├── .env
-├── requirements.txt
-├── README.md
-└── docker-compose.yml
-```
-
-The repository structure mirrors the supervisor-based multi-agent architecture directly.
-
----
-
-# 14. Documentation
-
-| Document                    | Purpose                        |
-| --------------------------- | ------------------------------ |
-| docs/PRD.md                 | Product requirements           |
-| docs/SYSTEM_ARCHITECTURE.md | System architecture            |
-| docs/AGENT_WORKFLOW_MAP.md  | Multi-agent workflow map       |
-| docs/PROJECT_STRUCTURE.md   | Repository structure           |
-| docs/DATABASE_SCHEMA.md     | Database schema                |
-| docs/LANGGRAPH_WORKFLOW.md  | LangGraph orchestration design |
-| docs/API_DESIGN.md          | API design                     |
-
----
-
-# 15. API Overview
-
-| Method | Endpoint                                          | Purpose                           |
-| ------ | ------------------------------------------------- | --------------------------------- |
-| POST   | /employees                                        | Create employee onboarding record |
-| GET    | /employees/{employee_id}                          | Get employee details              |
-| POST   | /employees/{employee_id}/generate-onboarding-plan | Trigger Supervisor Agent workflow |
-| POST   | /employees/{employee_id}/generate-checklist       | Generate onboarding checklist     |
-| POST   | /employees/{employee_id}/generate-email-draft     | Generate welcome email draft      |
-| POST   | /approvals                                        | Submit approval decision          |
-| PATCH  | /tasks/{task_id}/status                           | Update task status                |
-| GET    | /employees/{employee_id}/status                   | Get onboarding workflow status    |
-| GET    | /dashboard                                        | Get dashboard summary             |
-| GET    | /audit-logs                                       | Get workflow audit logs           |
-| GET    | /agent-runs                                       | Get agent execution history       |
-
----
-
-# 16. MVP Scope
-
-Version 1 focuses on:
-
-* employee onboarding creation
-* Supervisor Agent orchestration
-* specialist agent execution
-* onboarding checklist generation
-* welcome email generation
-* HR approval workflows
-* workflow state persistence
-* audit logging
-* OpenRouter-configured model routing
-* retry-safe workflow execution
-* observability and tracing
-
----
-
-## Deferred Features
-
-The MVP intentionally defers:
-
-* real HRMS integration
-* payroll integration
-* real document verification
-* real access provisioning
-* enterprise authentication
-* advanced role-based access control
-* distributed agent execution
-* advanced multi-agent collaboration
-* enterprise governance tooling
-
-The goal is to validate the architecture first before increasing operational complexity.
-
----
-
-# 17. Setup Instructions
-
-## 1. Clone Repository
+## Setup
 
 ```bash
-git clone https://github.com/your-username/onboarding-buddy.git
-cd onboarding-buddy
-```
-
----
-
-## 2. Create Virtual Environment
-
-```bash
-python -m venv venv
-```
-
----
-
-## 3. Activate Virtual Environment
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Mac/Linux:
-
-```bash
+python3 -m venv venv
 source venv/bin/activate
-```
-
----
-
-## 4. Install Dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
----
-
-## 5. Create Environment File
-
-Create a `.env` file:
+Create `.env`:
 
 ```text
 OPENROUTER_API_KEY=your_openrouter_api_key
-OPENROUTER_MODEL=openai/gpt-4.1
+OPENROUTER_MODEL=meta-llama/llama-3.1-8b-instruct
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-LANGSMITH_API_KEY=your_langsmith_api_key
-DATABASE_URL=sqlite:///onboarding_buddy.db
 ```
 
----
+Initialize the database:
 
-## 6. Run Backend
+```bash
+python -m database.db
+```
+
+## Run Locally
+
+Start the backend:
 
 ```bash
 uvicorn backend.main:app --reload
 ```
 
----
-
-## 7. Run Frontend
+Start the frontend:
 
 ```bash
 streamlit run frontend/app.py
 ```
 
----
-
-# 18. Engineering Principles
-
-The platform is designed around:
-
-* supervisor-based orchestration
-* stateful workflow execution
-* specialist agent isolation
-* human-in-the-loop approvals
-* workflow observability
-* provider abstraction
-* controlled tool execution
-* auditability
-* modular architecture
-* deterministic routing
-* persistence-first workflow design
-
-Onboarding Buddy demonstrates how multi-agent AI systems can support structured enterprise workflows through:
-
-* LangGraph orchestration
-* persistent workflow state
-* specialist agent coordination
-* configurable model routing
-* controlled tool execution
-* workflow observability
-* human-supervised execution
-
----
-
-# 19. Architecture Positioning
-
-This project is intentionally positioned as:
+Open:
 
 ```text
-A production-inspired supervisor-based multi-agent workflow system
+http://127.0.0.1:8501
 ```
 
-rather than:
+## Test
+
+```bash
+python -m compileall frontend backend database agents schemas tests
+python -m pytest
+```
+
+## Demo Flow
+
+1. Start FastAPI and Streamlit.
+2. Create a new employee record.
+3. Confirm the employee appears in the dashboard and directory.
+4. Generate the onboarding plan.
+5. Review the task metrics and generated task cards.
+6. Open workflow details to show supervisor routing and agent outputs.
+7. Fetch tasks again from the Tasks tab to show persistence.
+
+## Portfolio Highlights
+
+- Product-style frontend rather than a raw API demo
+- Supervisor-based multi-agent workflow with LangGraph
+- Deterministic fallback behavior for reliability
+- Structured task validation before database persistence
+- Duplicate task prevention
+- Clear API separation between frontend, backend, workflow, and database layers
+- Phase 1 scope discipline with roadmap items separated from implemented behavior
+
+## Roadmap
+
+These are intentionally deferred beyond Phase 1:
+
+- Policy and Knowledge Agent
+- Approval workflow
+- Welcome email draft review
+- Task status editing
+- Audit logs and workflow run persistence
+- Calendar and manager follow-up agents
+- Authentication and role-based access
+- Deployment to a hosted environment
+
+## Repository Structure
 
 ```text
-A simple chatbot wrapper
+agents/      LangGraph agent logic and workflow state
+backend/     FastAPI app and routes
+database/    SQLite schema and repositories
+docs/        Architecture, API, workflow, and portfolio documentation
+frontend/    Streamlit dashboard
+llm/         OpenRouter client
+schemas/     Pydantic request/response models
+scripts/     Local workflow utilities
+tests/       Agent and workflow safety tests
 ```
-
-The architecture demonstrates:
-
-* LangGraph orchestration
-* workflow state management
-* agent coordination
-* observability infrastructure
-* provider abstraction
-* routing systems
-* approval systems
-* workflow persistence
-* AI workflow engineering patterns
-
-This positioning significantly improves the project's relevance for:
-
-* AI engineering roles
-* agentic AI systems
-* workflow orchestration systems
-* enterprise AI applications
-* platform engineering discussions
-* system design interviews
-
----
-
-# 20. Planned Roadmap Enhancements
-
-Future roadmap enhancements include:
-
-* real email integration
-* Google Calendar integration
-* Outlook integration
-* Slack integration
-* Microsoft Teams integration
-* HRMS integration
-* employee FAQ chatbot
-* analytics dashboard
-* PostgreSQL migration
-* role-based access control
-* multi-company onboarding support
-* provider abstraction beyond OpenRouter
-* distributed workflow execution
-* advanced agent collaboration
-* deployed public demo
-
----
-
-# 21. Project Status
-
-Current Status:
-
-```text
-Architecture and workflow implementation phase
-```
-
-Completed documentation:
-
-* PRD
-* System Architecture
-* Agent Workflow Map
-* Project Structure
-* Database Schema
-* LangGraph Workflow
-* API Design
-
-Next Phase:
-
-```text
-Implementation Roadmap and MVP Build
-```
-
----
-
-# 22. Why This Project Matters
-
-Most AI portfolio projects stop at:
-
-* chatbot wrappers
-* prompt engineering demos
-* single-agent prototypes
-
-Onboarding Buddy is intentionally designed differently.
-
-This project demonstrates:
-
-* multi-agent orchestration
-* stateful workflow execution
-* LangGraph workflow engineering
-* workflow persistence
-* approval systems
-* observability infrastructure
-* provider abstraction
-* retry-safe execution
-* production-inspired architecture
-
-The goal is to demonstrate practical AI systems engineering instead of isolated prompt demos.
-
----
-
-# 23. License
-
-MIT License

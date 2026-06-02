@@ -1,5 +1,4 @@
-import json
-
+from agents.shared.json_utils import parse_json_object
 from agents.supervisor.prompts import (
     SUPERVISOR_SYSTEM_PROMPT,
     build_supervisor_user_prompt,
@@ -54,7 +53,7 @@ def route_next_agent(state):
         if not raw_response:
             raise ValueError("Supervisor LLM returned empty response.")
 
-        decision = json.loads(raw_response)
+        decision = parse_json_object(raw_response)
 
         next_agent = decision.get("next_agent")
         routing_reason = decision.get("routing_reason")
