@@ -33,7 +33,7 @@ The Streamlit frontend gives HR a simple operational dashboard for creating empl
 
 ## Scope Discipline
 
-The project keeps Phase 1 focused on:
+The project first stabilized Phase 1 around:
 
 - Create employee
 - Generate onboarding plan
@@ -41,7 +41,7 @@ The project keeps Phase 1 focused on:
 - View generated tasks
 - Show workflow and task status
 
-Policy retrieval, approvals, audit logs, and follow-up agents are documented as roadmap items rather than mixed into the Phase 1 implementation.
+Phase 2 begins with approval operations, task status updates, dependency enforcement, audit timeline visibility, and persisted workflow-run observability. Policy retrieval, email drafts, and follow-up agents remain roadmap items rather than mixed into the first Phase 2 slices.
 
 ## Outcome
 

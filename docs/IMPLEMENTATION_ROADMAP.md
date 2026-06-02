@@ -231,7 +231,7 @@ Implement persistent workflow storage and onboarding data management.
 
 ## Implementation Scope
 
-* Configure SQLite database
+* Configure PostgreSQL-ready database layer with SQLite fallback
 * Implement database connection layer
 * Create database schema
 * Implement persistence repositories
@@ -258,6 +258,8 @@ Implement persistent workflow storage and onboarding data management.
 ## Core Deliverables
 
 * operational persistence layer
+* PostgreSQL connection support through `DATABASE_URL`
+* local PostgreSQL compose service for deployment-oriented validation
 * workflow state persistence
 * audit logging persistence
 * agent execution persistence

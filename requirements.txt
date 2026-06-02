@@ -5,6 +5,7 @@ streamlit
 pydantic
 pydantic-settings
 python-dotenv
+psycopg[binary]
 langgraph
 langchain
 langchain-core

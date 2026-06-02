@@ -57,10 +57,15 @@ http://localhost:8000
 | GET    | /employees/{employee_id}                          | Get employee details                          |
 | PUT    | /employees/{employee_id}                          | Edit employee onboarding details              |
 | GET    | /employees/{employee_id}/tasks                    | Get generated onboarding tasks                |
+| GET    | /employees/{employee_id}/timeline                 | Get employee workflow history                 |
 | POST   | /employees/{employee_id}/generate-onboarding-plan | Trigger Supervisor Agent workflow             |
 | POST   | /employees/{employee_id}/generate-checklist       | Generate onboarding checklist                 |
 | POST   | /employees/{employee_id}/generate-email-draft     | Generate welcome email draft                  |
 | POST   | /approvals                                        | Submit approval decision                      |
+| GET    | /approvals                                        | List approval requests                        |
+| PATCH  | /approvals/{approval_id}                          | Record approval decision                      |
+| GET    | /tasks/{task_id}                                  | Get onboarding task                           |
+| GET    | /tasks/{task_id}/dependencies                     | Get task dependencies                         |
 | PATCH  | /tasks/{task_id}/status                           | Update task status                            |
 | GET    | /employees/{employee_id}/status                   | Get onboarding status                         |
 | GET    | /dashboard                                        | Get dashboard summary                         |
@@ -68,8 +73,9 @@ http://localhost:8000
 | GET    | /agent-runs                                       | Get agent execution history                   |
 | GET    | /employees/{employee_id}/agent-runs               | Get employee-specific agent execution history |
 | GET    | /workflow-runs/{workflow_run_id}                  | Get workflow run details                      |
+| GET    | /workflow-runs                                    | List workflow runs                            |
 
-Current Phase 1 implementation supports `POST /employees`, `GET /employees`, `GET /employees/{employee_id}`, `PUT /employees/{employee_id}`, `GET /employees/{employee_id}/tasks`, and `POST /employees/{employee_id}/generate-onboarding-plan`. The other endpoints remain roadmap items for approvals, workflow observability, and task status operations.
+Current implementation supports `POST /employees`, `GET /employees`, `GET /employees/{employee_id}`, `PUT /employees/{employee_id}`, `GET /employees/{employee_id}/tasks`, `GET /employees/{employee_id}/timeline`, `POST /employees/{employee_id}/generate-onboarding-plan`, `GET /approvals`, `PATCH /approvals/{approval_id}`, `GET /tasks/{task_id}`, `GET /tasks/{task_id}/dependencies`, `PATCH /tasks/{task_id}/status`, `GET /workflow-runs`, and `GET /workflow-runs/{workflow_run_id}`. Email drafts remain a roadmap item.
 
 ---
 

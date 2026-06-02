@@ -3,6 +3,9 @@ from agents.task_planning.prompts import (
     TASK_PLANNING_SYSTEM_PROMPT,
     build_task_planning_user_prompt,
 )
+from database.repositories.approval_repository import create_task_approvals, get_approvals
+from database.repositories.audit_repository import create_audit_log
+from database.repositories.dependency_repository import create_linear_task_dependencies
 from database.repositories.task_repository import (
     create_tasks,
     get_tasks_by_employee_id,
@@ -179,9 +182,17 @@ def run_task_planning_agent(state):
     existing_tasks = get_tasks_by_employee_id(state["employee_id"])
 
     if existing_tasks:
+        create_task_approvals(state["employee_id"], existing_tasks)
+        dependency_records = create_linear_task_dependencies(
+            state["employee_id"],
+            existing_tasks,
+        )
+        approval_records = get_approvals(employee_id=state["employee_id"])
         return {
             **state,
             "onboarding_tasks": existing_tasks,
+            "approval_records": approval_records,
+            "task_dependencies": dependency_records,
             "current_agent": "task_planning_agent",
             "workflow_status": "RUNNING",
             "agent_outputs": {
@@ -189,6 +200,8 @@ def run_task_planning_agent(state):
                 "task_planning_agent": {
                     "status": "skipped",
                     "task_count": len(existing_tasks),
+                    "approval_count": len(approval_records),
+                    "dependency_count": len(dependency_records),
                     "message": "Existing onboarding tasks found. Skipped duplicate task generation.",
                 },
             },
@@ -212,10 +225,23 @@ def run_task_planning_agent(state):
         generation_source = "fallback"
 
     saved_tasks = create_tasks(state["employee_id"], generated_tasks)
+    create_task_approvals(state["employee_id"], saved_tasks)
+    dependency_records = create_linear_task_dependencies(state["employee_id"], saved_tasks)
+    approval_records = get_approvals(employee_id=state["employee_id"])
+    create_audit_log(
+        employee_id=state["employee_id"],
+        event_type="workflow_plan_generated",
+        event_message=(
+            f"Generated {len(saved_tasks)} onboarding tasks using {generation_source}."
+        ),
+        agent_name="task_planning_agent",
+    )
 
     return {
         **state,
         "onboarding_tasks": saved_tasks,
+        "approval_records": approval_records,
+        "task_dependencies": dependency_records,
         "current_agent": "task_planning_agent",
         "workflow_status": "RUNNING",
         "agent_outputs": {
@@ -223,6 +249,8 @@ def run_task_planning_agent(state):
             "task_planning_agent": {
                 "status": "success",
                 "task_count": len(saved_tasks),
+                "approval_count": len(approval_records),
+                "dependency_count": len(dependency_records),
                 "generation_source": generation_source,
                 "message": "Onboarding tasks generated and saved successfully.",
             },

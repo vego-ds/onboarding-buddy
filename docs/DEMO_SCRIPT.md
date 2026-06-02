@@ -32,9 +32,15 @@ streamlit run frontend/app.py
    - approval-required tasks
    - owners
 9. Expand workflow details and briefly point out supervisor routing and agent output.
-10. Go to Tasks.
-11. Fetch tasks for the same employee to show persistence.
-12. End on the Directory tab to show the product-style dashboard view.
+10. Go to Operations.
+11. Show the approval queue for approval-required tasks.
+12. Show the task status controls for the same employee.
+13. Point out dependency labels under each task.
+14. Show the workflow timeline.
+15. Show the recent workflow run and agent execution summaries.
+16. Go to Tasks.
+17. Fetch tasks for the same employee to show persistence.
+18. End on the Directory tab to show the product-style dashboard view.
 
 ## Talking Points
 
@@ -44,4 +50,8 @@ streamlit run frontend/app.py
 - Intake validates employee data before task planning.
 - Task Planning generates structured tasks and validates them before persistence.
 - The system falls back to deterministic tasks if LLM generation fails.
-- Phase 2 is intentionally deferred to approvals, policy retrieval, audit logs, and richer workflow tracking.
+- Phase 2 starts with approval operations and task status updates.
+- Dependency enforcement prevents downstream work from starting too early.
+- Audit events make the workflow explainable.
+- Workflow-run records make execution observable.
+- Policy retrieval, email drafts, and manager follow-up automation remain future roadmap items.

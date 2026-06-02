@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 from database.db import get_connection
@@ -6,7 +6,7 @@ from database.db import get_connection
 
 def create_employee(employee_data):
     employee_id = f"EMP_{uuid4().hex[:8].upper()}"
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(UTC).isoformat()
 
     query = """
     INSERT INTO employees (
@@ -78,7 +78,7 @@ def list_employees(limit=25):
 
 
 def update_employee_status(employee_id, onboarding_status):
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(UTC).isoformat()
     query = """
     UPDATE employees
     SET onboarding_status = ?, updated_at = ?
@@ -93,7 +93,7 @@ def update_employee_status(employee_id, onboarding_status):
 
 
 def update_employee(employee_id, employee_data):
-    now = datetime.utcnow().isoformat()
+    now = datetime.now(UTC).isoformat()
     query = """
     UPDATE employees
     SET

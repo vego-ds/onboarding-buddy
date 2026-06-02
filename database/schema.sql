@@ -25,6 +25,18 @@ CREATE TABLE IF NOT EXISTS onboarding_tasks (
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
+CREATE TABLE IF NOT EXISTS task_dependencies (
+    dependency_id TEXT PRIMARY KEY,
+    employee_id TEXT NOT NULL,
+    task_id TEXT NOT NULL,
+    depends_on_task_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
+    FOREIGN KEY (task_id) REFERENCES onboarding_tasks(task_id),
+    FOREIGN KEY (depends_on_task_id) REFERENCES onboarding_tasks(task_id),
+    UNIQUE (task_id, depends_on_task_id)
+);
+
 CREATE TABLE IF NOT EXISTS approvals (
     approval_id TEXT PRIMARY KEY,
     employee_id TEXT NOT NULL,
@@ -82,7 +94,9 @@ CREATE TABLE IF NOT EXISTS agent_runs (
     llm_provider TEXT DEFAULT 'OpenRouter',
     llm_model TEXT,
     started_at TEXT NOT NULL,
-    completed_at TEXT
+    completed_at TEXT,
+    FOREIGN KEY (workflow_run_id) REFERENCES workflow_runs(workflow_run_id),
+    FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
 CREATE TABLE IF NOT EXISTS workflow_state (
@@ -100,5 +114,49 @@ CREATE TABLE IF NOT EXISTS workflow_state (
     workflow_context_json TEXT,
     agent_execution_history_json TEXT,
     created_at TEXT NOT NULL,
-    updated_at TEXT NOT NULL
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (workflow_run_id) REFERENCES workflow_runs(workflow_run_id),
+    FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_employees_created_at
+ON employees(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_employees_onboarding_status
+ON employees(onboarding_status);
+
+CREATE INDEX IF NOT EXISTS idx_onboarding_tasks_employee_id
+ON onboarding_tasks(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_onboarding_tasks_status
+ON onboarding_tasks(task_status);
+
+CREATE INDEX IF NOT EXISTS idx_task_dependencies_task_id
+ON task_dependencies(task_id);
+
+CREATE INDEX IF NOT EXISTS idx_approvals_employee_id
+ON approvals(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_approvals_related_task_id
+ON approvals(related_task_id);
+
+CREATE INDEX IF NOT EXISTS idx_approvals_status
+ON approvals(approval_status);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_employee_id_timestamp
+ON audit_logs(employee_id, timestamp);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_workflow_run_id
+ON audit_logs(workflow_run_id);
+
+CREATE INDEX IF NOT EXISTS idx_workflow_runs_employee_id_started_at
+ON workflow_runs(employee_id, started_at);
+
+CREATE INDEX IF NOT EXISTS idx_workflow_runs_status
+ON workflow_runs(workflow_status);
+
+CREATE INDEX IF NOT EXISTS idx_agent_runs_workflow_run_id
+ON agent_runs(workflow_run_id);
+
+CREATE INDEX IF NOT EXISTS idx_agent_runs_employee_id
+ON agent_runs(employee_id);

@@ -1,15 +1,17 @@
-import sqlite3
 from collections import Counter
 
 from fastapi import APIRouter, HTTPException, Query
 
 from backend.services_workflow import run_onboarding_workflow_for_employee
+from database.db import get_integrity_error_classes, is_duplicate_email_error
 from database.repositories.employee_repository import (
     create_employee,
     get_employee_by_id,
     list_employees,
     update_employee,
 )
+from database.repositories.approval_repository import get_approvals
+from database.repositories.audit_repository import create_audit_log, get_audit_logs
 from database.repositories.task_repository import get_tasks_by_employee_id
 from schemas.employee import EmployeeCreateRequest, EmployeeUpdateRequest
 
@@ -26,9 +28,9 @@ def create_employee_record(employee: EmployeeCreateRequest):
             "message": "Employee onboarding record created successfully.",
             "employee": created_employee,
         }
-    except sqlite3.IntegrityError as error:
+    except get_integrity_error_classes() as error:
         message = str(error)
-        if "employees.employee_email" in message:
+        if is_duplicate_email_error(error):
             raise HTTPException(
                 status_code=409,
                 detail="An employee with this email already exists.",
@@ -66,15 +68,21 @@ def update_employee_record(employee_id: str, employee: EmployeeUpdateRequest):
         if updated_employee is None:
             raise HTTPException(status_code=404, detail="Employee not found.")
 
+        create_audit_log(
+            employee_id=updated_employee["employee_id"],
+            event_type="employee_updated",
+            event_message="Employee onboarding record was updated.",
+        )
+
         return {
             "employee_id": updated_employee["employee_id"],
             "status": "updated",
             "message": "Employee onboarding record updated successfully.",
             "employee": updated_employee,
         }
-    except sqlite3.IntegrityError as error:
+    except get_integrity_error_classes() as error:
         message = str(error)
-        if "employees.employee_email" in message:
+        if is_duplicate_email_error(error):
             raise HTTPException(
                 status_code=409,
                 detail="An employee with this email already exists.",
@@ -101,7 +109,29 @@ def get_employee_tasks(employee_id: str):
         "status_counts": dict(status_counts),
         "priority_counts": dict(priority_counts),
         "approval_required_count": approval_required_count,
+        "pending_approval_count": len(
+            get_approvals(
+                employee_id=employee["employee_id"],
+                approval_status="Awaiting Approval",
+            )
+        ),
         "tasks": tasks,
+    }
+
+
+@router.get("/{employee_id}/timeline")
+def get_employee_timeline(employee_id: str):
+    employee = get_employee_by_id(employee_id)
+
+    if employee is None:
+        raise HTTPException(status_code=404, detail="Employee not found.")
+
+    events = get_audit_logs(employee_id=employee_id, limit=100)
+
+    return {
+        "employee_id": employee["employee_id"],
+        "event_count": len(events),
+        "events": events,
     }
 
 
@@ -115,9 +145,24 @@ def generate_onboarding_plan(employee_id: str):
     tasks = final_state.get("onboarding_tasks", [])
     status_counts = Counter(task.get("task_status", "Unknown") for task in tasks)
     approval_required_count = sum(1 for task in tasks if task.get("approval_required"))
+    employee_id = employee_id.upper()
+    pending_approval_count = len(
+        get_approvals(
+            employee_id=employee_id,
+            approval_status="Awaiting Approval",
+        )
+    )
+    create_audit_log(
+        employee_id=employee_id,
+        event_type="workflow_plan_requested",
+        event_message="Onboarding plan workflow was requested.",
+        agent_name="supervisor",
+        routing_reason=final_state.get("supervisor_routing_reason"),
+    )
 
     return {
-        "employee_id": employee_id.upper(),
+        "employee_id": employee_id,
+        "workflow_run_id": final_state.get("workflow_run_id"),
         "workflow_status": final_state.get("workflow_status"),
         "next_agent": final_state.get("next_agent"),
         "routing_reason": final_state.get("supervisor_routing_reason"),
@@ -125,5 +170,6 @@ def generate_onboarding_plan(employee_id: str):
         "task_count": len(tasks),
         "status_counts": dict(status_counts),
         "approval_required_count": approval_required_count,
+        "approval_count": pending_approval_count,
         "tasks": tasks,
     }

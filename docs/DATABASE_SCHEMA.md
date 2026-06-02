@@ -56,39 +56,37 @@ Observability
 
 # 3. Database Technology
 
-## MVP Database
+## Phase 2 Database
 
 ```text id="5yo4lt"
-SQLite
-```
-
-SQLite is selected because:
-
-* lightweight
-* simple setup
-* fast local development
-* beginner friendly
-* sufficient for MVP scale
-
----
-
-## Future Database Upgrade
-
-Future production versions may migrate to:
-
-```text id="phvxlg"
 PostgreSQL
 ```
 
-Reasons:
+PostgreSQL is the Phase 2 production-oriented database because workflow orchestration now stores durable operational records:
+
+* workflow runs
+* agent execution history
+* approval decisions
+* task lifecycle transitions
+* dependency relationships
+* audit events
+
+The application keeps a SQLite fallback for lightweight local demos and tests:
+
+```text id="phvxlg"
+sqlite:///onboarding_buddy.db
+```
+
+PostgreSQL should be used for deployment-oriented Phase 2 work because it provides:
 
 * better concurrency
-* stronger scalability
-* production-grade reliability
+* stronger transactional integrity
+* production-grade operational persistence
 * advanced indexing
-* role-based security
-* multi-user support
-* workflow performance optimization
+* reliable relational workflow history
+* better multi-user and dashboard-read behavior
+
+The active database is selected with `DATABASE_URL`.
 
 ---
 
