@@ -25,7 +25,7 @@ Phase 2 MVP scope is implemented and in stabilization:
 - project structure
 - FastAPI backend
 - Streamlit frontend
-- SQLite persistence
+- initial local persistence
 - employee creation and listing
 - onboarding plan generation
 - Supervisor Agent
@@ -41,7 +41,6 @@ Phase 2 MVP scope is implemented and in stabilization:
 ### Persistence and Deployment
 
 - PostgreSQL support through `DATABASE_URL`
-- SQLite fallback for local development and tests
 - local PostgreSQL via Docker Compose
 - Render PostgreSQL deployment support
 - repeatable schema initialization with `schema.sql`
@@ -70,13 +69,6 @@ Alembic is not implemented yet.
 - Operations workspace workflow visibility
 
 ## Deployment Verification Checklist
-
-Local SQLite:
-
-```bash
-DATABASE_URL=sqlite:///onboarding_buddy.db
-python -m database.db
-```
 
 Local PostgreSQL:
 

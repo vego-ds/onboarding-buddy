@@ -24,7 +24,7 @@ flowchart TD
     Approvals --> Repos
     Runs --> Repos
     Service --> Repos
-    Repos --> DB[("PostgreSQL or SQLite")]
+    Repos --> DB[("PostgreSQL")]
 ```
 
 ## Workflow Sequence
@@ -38,7 +38,7 @@ sequenceDiagram
     participant S as Supervisor
     participant I as Intake Agent
     participant T as Task Planning Agent
-    participant DB as PostgreSQL/SQLite
+    participant DB as PostgreSQL
 
     HR->>UI: Create employee
     UI->>API: POST /employees

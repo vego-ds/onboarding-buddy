@@ -13,7 +13,6 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - OpenRouter LLM integration with deterministic fallback tasks
 - FastAPI backend
 - Streamlit frontend
-- SQLite fallback
 - PostgreSQL support through `DATABASE_URL`
 - Render PostgreSQL deployment support
 - Employee create, list, detail, and edit
@@ -48,7 +47,7 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - Backend: FastAPI
 - Workflow orchestration: LangGraph
 - LLM provider: OpenRouter
-- Database: PostgreSQL for Phase 2 infrastructure, SQLite for local fallback
+- Database: PostgreSQL
 - Validation: Pydantic
 - Tests: pytest
 
@@ -76,7 +75,7 @@ Supervisor Agent
   +--> Task Planning Agent
   |
   v
-PostgreSQL or SQLite
+PostgreSQL
 ```
 
 The frontend never calls agents directly. It calls FastAPI endpoints, and the backend controls workflow execution, persistence, and operational state.
@@ -108,15 +107,6 @@ The frontend never calls agents directly. It calls FastAPI endpoints, and the ba
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-```
-
-## Local SQLite
-
-Use SQLite for lightweight local demos:
-
-```bash
-export DATABASE_URL=sqlite:///onboarding_buddy.db
-python -m database.db
 ```
 
 ## Local PostgreSQL
@@ -196,7 +186,7 @@ http://127.0.0.1:8000
 
 ## Migration Note
 
-The current implementation uses a small database adapter and a repeatable `schema.sql` file. Alembic is not implemented yet. If schema changes become frequent across deployed environments, add Alembic or dedicated migration scripts before making destructive table changes.
+The current implementation uses a small database adapter and a repeatable `schema.sql` file against PostgreSQL. Alembic is not implemented yet. If schema changes become frequent across deployed environments, add Alembic or dedicated migration scripts before making destructive table changes.
 
 ## Repository Structure
 

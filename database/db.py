@@ -1,7 +1,5 @@
 import os
-import sqlite3
 from pathlib import Path
-from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 
@@ -13,14 +11,16 @@ except ImportError:  # pragma: no cover - exercised only when PostgreSQL is used
     dict_row = None
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-DB_PATH = BASE_DIR / "onboarding_buddy.db"
 SCHEMA_PATH = BASE_DIR / "database" / "schema.sql"
+DEFAULT_DATABASE_URL = (
+    "postgresql://onboarding_buddy:onboarding_buddy@localhost:5432/onboarding_buddy"
+)
 
 load_dotenv(BASE_DIR / ".env")
 
 
 def get_database_url():
-    return os.getenv("DATABASE_URL", f"sqlite:///{DB_PATH}")
+    return os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
 
 
 def is_postgres_url(database_url):
@@ -29,9 +29,9 @@ def is_postgres_url(database_url):
 
 def get_integrity_error_classes():
     if psycopg is None:
-        return (sqlite3.IntegrityError,)
+        return ()
 
-    return (sqlite3.IntegrityError, psycopg.IntegrityError)
+    return (psycopg.IntegrityError,)
 
 
 def is_duplicate_email_error(error):
@@ -83,36 +83,16 @@ def split_sql_statements(script):
     return [statement.strip() for statement in script.split(";") if statement.strip()]
 
 
-def get_sqlite_path(database_url):
-    parsed = urlparse(database_url)
-
-    if parsed.scheme != "sqlite":
-        return DB_PATH
-
-    if parsed.path in ("", "/"):
-        return DB_PATH
-
-    if parsed.netloc:
-        return Path(f"{parsed.netloc}{parsed.path}")
-
-    if parsed.path.startswith("//"):
-        return Path(parsed.path[1:])
-
-    if parsed.path.startswith("/"):
-        return BASE_DIR / parsed.path.lstrip("/")
-
-    return BASE_DIR / parsed.path
-
-
 def get_connection():
     database_url = get_database_url()
 
     if is_postgres_url(database_url):
         return PostgresConnection(database_url)
 
-    connection = sqlite3.connect(get_sqlite_path(database_url))
-    connection.row_factory = sqlite3.Row
-    return connection
+    raise RuntimeError(
+        "DATABASE_URL must be a PostgreSQL URL, for example "
+        "postgresql://onboarding_buddy:onboarding_buddy@localhost:5432/onboarding_buddy"
+    )
 
 
 def init_db():

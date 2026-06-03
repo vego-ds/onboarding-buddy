@@ -525,9 +525,7 @@ Responsibilities:
 * provider metadata persistence
 * retry tracking
 
-SQLite is used for the MVP version.
-
-Future versions may migrate to PostgreSQL.
+PostgreSQL is used for the Phase 2 runtime database.
 
 ---
 

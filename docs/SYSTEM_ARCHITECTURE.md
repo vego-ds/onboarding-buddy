@@ -30,8 +30,6 @@ Repository Layer
   |
   v
 PostgreSQL through DATABASE_URL
-  or
-SQLite fallback
 ```
 
 ## Implemented Components
@@ -43,7 +41,6 @@ SQLite fallback
 - Intake Agent
 - Task Planning Agent
 - OpenRouter LLM client
-- SQLite fallback
 - PostgreSQL support
 - Render PostgreSQL support through `DATABASE_URL`
 - Employee repository
@@ -79,7 +76,7 @@ The database stores:
 - agent runs
 - workflow state table reserved for future state snapshots
 
-PostgreSQL is the Phase 2 production-oriented database. SQLite remains supported for local fallback and tests.
+PostgreSQL is the Phase 2 runtime database. Repository tests may use in-memory test doubles, but the application database adapter now requires a PostgreSQL `DATABASE_URL`.
 
 ## Operational Rules
 
@@ -91,13 +88,6 @@ PostgreSQL is the Phase 2 production-oriented database. SQLite remains supported
 - Workflow run IDs, task IDs, approval IDs, and employee IDs are normalized at repository boundaries where needed.
 
 ## Deployment
-
-Local SQLite:
-
-```bash
-DATABASE_URL=sqlite:///onboarding_buddy.db
-python -m database.db
-```
 
 Local PostgreSQL:
 

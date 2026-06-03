@@ -1,4 +1,6 @@
-from database.db import BASE_DIR, convert_placeholders, get_sqlite_path, is_postgres_url
+import pytest
+
+from database.db import convert_placeholders, get_connection, is_postgres_url
 
 
 def test_detects_postgres_database_urls():
@@ -16,7 +18,8 @@ def test_converts_sqlite_placeholders_for_postgres_driver():
     )
 
 
-def test_resolves_sqlite_database_path():
-    assert get_sqlite_path("sqlite:///onboarding_buddy.db") == (
-        BASE_DIR / "onboarding_buddy.db"
-    )
+def test_rejects_non_postgres_runtime_database_url(monkeypatch):
+    monkeypatch.setenv("DATABASE_URL", "sqlite:///onboarding_buddy.db")
+
+    with pytest.raises(RuntimeError, match="PostgreSQL URL"):
+        get_connection()

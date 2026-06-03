@@ -40,7 +40,7 @@ streamlit run frontend/app.py
 - Workflow runs and agent runs are persisted for observability.
 - Approval decisions and dependency completion affect task lock state.
 - Timeline events make workflow behavior auditable.
-- PostgreSQL is supported for Phase 2 deployment, with SQLite available for local fallback.
+- PostgreSQL is the Phase 2 runtime database.
 
 ## Roadmap Callout
 

@@ -417,7 +417,7 @@ before scaling into enterprise-grade complexity.
 - Email and calendar integrations will be simulated in Version 1.
 - HR users will manually approve sensitive actions.
 - The MVP will support a limited number of onboarding workflows.
-- SQLite is sufficient for initial development and testing.
+- PostgreSQL is the Phase 2 persistence target for deployment and workflow operations.
 - Initial onboarding workflows will focus on standard employee onboarding cases.
 - OpenRouter will be used as the LLM provider for configurable model routing.
 - The selected model will be managed through environment variables.
@@ -530,7 +530,7 @@ Using specialist agents improves:
 
 ### Database
 
-- SQLite
+- PostgreSQL
 
 ### Vector Memory
 
@@ -543,6 +543,6 @@ Using specialist agents improves:
 ### Monitoring and Logging
 
 - Python logging for backend logs
-- SQLite audit_logs table for product activity logs
+- PostgreSQL audit_logs table for product activity logs
 - LangSmith for LangGraph agent tracing
 - OpenRouter request metadata for provider-level observability

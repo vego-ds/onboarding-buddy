@@ -5,11 +5,10 @@
 Phase 2 supports:
 
 - PostgreSQL through `DATABASE_URL`
-- SQLite fallback through `DATABASE_URL=sqlite:///onboarding_buddy.db`
 - local PostgreSQL through `docker-compose.yml`
 - Render PostgreSQL through the Render Internal Database URL
 
-The active database is selected in `database/db.py`.
+The active database is selected in `database/db.py`. If `DATABASE_URL` is missing, the app defaults to the local Docker Compose PostgreSQL URL.
 
 ## Tables
 

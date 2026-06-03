@@ -4,7 +4,7 @@
 
 Phase 2 uses PostgreSQL as the production-oriented persistence layer for workflow orchestration data.
 
-The app still supports SQLite for lightweight local demos and tests, but PostgreSQL should be used when validating operational workflow behavior.
+PostgreSQL is the supported runtime database for Phase 2.
 
 ## Start PostgreSQL Locally
 
@@ -29,19 +29,13 @@ Use this value in `.env`:
 DATABASE_URL=postgresql://onboarding_buddy:onboarding_buddy@localhost:5432/onboarding_buddy
 ```
 
-For SQLite fallback:
-
-```text
-DATABASE_URL=sqlite:///onboarding_buddy.db
-```
-
 ## Initialize Schema
 
 ```bash
 python -m database.db
 ```
 
-The same schema file is used for SQLite and PostgreSQL.
+The schema file is used to initialize PostgreSQL tables and indexes.
 
 ## Verify
 

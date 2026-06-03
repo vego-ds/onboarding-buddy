@@ -24,7 +24,7 @@ The FastAPI backend persists workflow runs, agent runs, tasks, approvals, depend
 - Streamlit frontend with Operations workspace
 - LangGraph orchestration with deterministic routing safeguards
 - OpenRouter integration for configurable LLM task generation
-- PostgreSQL support with SQLite fallback
+- PostgreSQL persistence support
 - Render PostgreSQL deployment support
 - Workflow run persistence
 - Agent run history

@@ -29,87 +29,139 @@ def inject_styles():
         """
         <style>
         :root {
-            --bg: #f6f7f9;
-            --panel: #ffffff;
-            --ink: #17202a;
-            --muted: #5d6975;
-            --line: #d8dee6;
-            --accent: #2f6f64;
-            --accent-soft: #e4f2ee;
-            --blue-soft: #e8f0fb;
-            --amber-soft: #fff3d6;
-            --danger-soft: #fce8e6;
+            --bg: #f4f6f8;
+            --surface: #ffffff;
+            --surface-subtle: #f8fafc;
+            --ink: #111827;
+            --heading: #0f172a;
+            --muted: #64748b;
+            --line: #d8e0ea;
+            --line-strong: #c4cfdd;
+            --accent: #2563eb;
+            --accent-soft: #eff6ff;
+            --success: #15803d;
+            --success-soft: #ecfdf3;
+            --warning: #b45309;
+            --warning-soft: #fff7ed;
+            --danger: #b91c1c;
+            --danger-soft: #fef2f2;
+            --shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+            --radius: 10px;
         }
         .stApp {
             background: var(--bg);
             color: var(--ink);
         }
         .block-container {
-            max-width: 1240px;
-            padding-top: 1.4rem;
+            max-width: 1280px;
+            padding-top: 1rem;
             padding-bottom: 2rem;
         }
         [data-testid="stHeader"] {
             background: transparent;
         }
+        section[data-testid="stSidebar"] {
+            background: #0f172a;
+        }
+        section[data-testid="stSidebar"] * {
+            color: #e5e7eb;
+        }
+        section[data-testid="stSidebar"] .stButton > button {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.18);
+            color: #ffffff !important;
+        }
         .app-header {
-            border-bottom: 1px solid var(--line);
-            padding: 0.2rem 0 1rem;
-            margin-bottom: 1.2rem;
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            color: #ffffff;
+            padding: 1.35rem 1.5rem;
+            margin-bottom: 1.1rem;
         }
         .app-title {
-            font-size: 2.25rem;
+            font-size: 2rem;
             line-height: 1.1;
             font-weight: 760;
             letter-spacing: 0;
             margin: 0;
-            color: var(--ink);
+            color: #ffffff;
         }
         .app-subtitle {
-            color: var(--muted);
+            color: #cbd5e1;
             font-size: 1rem;
             margin: 0.35rem 0 0;
             max-width: 820px;
         }
+        .section-kicker {
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 750;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+        }
+        .section-title {
+            color: var(--heading);
+            font-size: 1.35rem;
+            font-weight: 760;
+            line-height: 1.2;
+            margin: 0 0 0.8rem;
+        }
         .metric-strip {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: 0.75rem;
-            margin: 0.25rem 0 1rem;
+            margin: 0.35rem 0 1.1rem;
         }
         .metric-tile,
         .employee-panel,
         .task-card,
+        .profile-card,
+        .workflow-card,
         .empty-state {
-            background: var(--panel);
+            background: var(--surface);
             border: 1px solid var(--line);
-            border-radius: 8px;
+            border-radius: var(--radius);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
         }
         .metric-tile {
-            padding: 0.9rem 1rem;
-            min-height: 84px;
+            border-left: 4px solid transparent;
+            padding: 0.85rem 0.95rem;
+            min-height: 92px;
+        }
+        .metric-tile-active {
+            border-color: var(--accent);
+            box-shadow: var(--shadow);
         }
         .metric-label {
             color: var(--muted);
             font-size: 0.78rem;
-            font-weight: 650;
+            font-weight: 750;
             text-transform: uppercase;
             margin-bottom: 0.4rem;
         }
         .metric-value {
-            color: var(--ink);
+            color: var(--heading);
             font-size: 1.55rem;
             font-weight: 760;
             line-height: 1.1;
         }
+        .metric-help {
+            color: var(--muted);
+            font-size: 0.78rem;
+            margin-top: 0.3rem;
+        }
         .employee-panel,
-        .task-card {
+        .task-card,
+        .profile-card,
+        .workflow-card {
             padding: 1rem;
             margin-bottom: 0.75rem;
         }
         .employee-name,
         .task-title {
-            color: var(--ink);
+            color: var(--heading);
             font-size: 1rem;
             font-weight: 740;
             line-height: 1.35;
@@ -126,6 +178,12 @@ def inject_styles():
             gap: 1rem;
             margin-bottom: 0.35rem;
         }
+        .employee-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+        }
         .chip-row {
             display: flex;
             gap: 0.45rem;
@@ -135,31 +193,90 @@ def inject_styles():
         .chip {
             border-radius: 999px;
             border: 1px solid var(--line);
-            color: var(--ink);
-            background: #f9fafb;
+            color: var(--heading);
+            background: var(--surface-subtle);
             font-size: 0.74rem;
             font-weight: 650;
             padding: 0.16rem 0.55rem;
             white-space: nowrap;
         }
-        .chip-high { background: var(--danger-soft); }
-        .chip-medium { background: var(--amber-soft); }
-        .chip-low { background: var(--blue-soft); }
-        .chip-status { background: var(--accent-soft); }
-        .chip-locked { background: var(--danger-soft); }
-        .chip-unlocked { background: var(--accent-soft); }
+        .chip-high { background: var(--danger-soft); color: var(--danger); border-color: #fecaca; }
+        .chip-medium { background: var(--warning-soft); color: var(--warning); border-color: #fed7aa; }
+        .chip-low { background: var(--accent-soft); color: var(--accent); border-color: #bfdbfe; }
+        .chip-status { background: var(--accent-soft); color: var(--accent); border-color: #bfdbfe; }
+        .chip-success { background: var(--success-soft); color: var(--success); border-color: #bbf7d0; }
+        .chip-warning { background: var(--warning-soft); color: var(--warning); border-color: #fed7aa; }
+        .chip-danger { background: var(--danger-soft); color: var(--danger); border-color: #fecaca; }
+        .chip-locked { background: var(--danger-soft); color: var(--danger); border-color: #fecaca; }
+        .chip-unlocked { background: var(--success-soft); color: var(--success); border-color: #bbf7d0; }
+        .task-card-locked {
+            border-color: #fecaca;
+            border-left: 4px solid var(--danger);
+        }
+        .task-card-ready {
+            border-left: 4px solid var(--success);
+        }
         .dependency-state {
-            border-left: 3px solid var(--line);
+            background: var(--surface-subtle);
+            border: 1px solid var(--line);
+            border-left: 4px solid var(--line-strong);
+            border-radius: 8px;
             color: var(--muted);
             font-size: 0.86rem;
             line-height: 1.45;
             margin: 0.55rem 0 0.8rem;
-            padding-left: 0.75rem;
+            padding: 0.65rem 0.75rem;
+        }
+        .dependency-locked { border-left-color: var(--danger); }
+        .dependency-ready { border-left-color: var(--success); }
+        .timeline-item {
+            border-left: 4px solid var(--accent);
+        }
+        .agent-step {
+            border-left: 4px solid var(--accent);
+            position: relative;
         }
         .empty-state {
             color: var(--muted);
-            padding: 1.1rem;
+            padding: 1.15rem;
             margin-top: 0.5rem;
+            text-align: center;
+        }
+        .empty-title {
+            color: var(--heading);
+            font-weight: 760;
+            margin-bottom: 0.25rem;
+        }
+        .error-box {
+            background: var(--danger-soft);
+            border: 1px solid #fecaca;
+            border-radius: var(--radius);
+            color: var(--danger);
+            padding: 0.9rem 1rem;
+            margin: 0.5rem 0;
+        }
+        .status-pill {
+            align-items: center;
+            border-radius: 999px;
+            display: inline-flex;
+            font-size: 0.78rem;
+            font-weight: 760;
+            gap: 0.35rem;
+            padding: 0.22rem 0.65rem;
+        }
+        .status-online {
+            background: var(--success-soft);
+            color: var(--success);
+        }
+        .status-offline {
+            background: var(--danger-soft);
+            color: var(--danger);
+        }
+        .status-dot {
+            border-radius: 999px;
+            display: inline-block;
+            height: 0.45rem;
+            width: 0.45rem;
         }
         div[data-testid="stTabs"] button {
             color: var(--ink);
@@ -182,12 +299,12 @@ def inject_styles():
             background: #ffffff;
             border-color: var(--line);
             color: var(--ink);
-            border-radius: 6px;
+            border-radius: 8px;
         }
         .stButton > button,
         .stFormSubmitButton > button {
             background: #ffffff;
-            border-radius: 6px;
+            border-radius: 8px;
             min-height: 2.65rem;
             font-weight: 700;
             border-color: var(--line);
@@ -198,6 +315,10 @@ def inject_styles():
             background: var(--accent);
             border-color: var(--accent);
             color: #ffffff !important;
+        }
+        .stButton > button:hover,
+        .stFormSubmitButton > button:hover {
+            border-color: var(--accent);
         }
         @media (max-width: 900px) {
             .metric-strip {
@@ -295,6 +416,72 @@ def format_status(status):
     return str(status or "Unknown").replace("_", " ").title()
 
 
+def chip_class_for_status(status):
+    normalized = format_status(status)
+    if normalized in {"Completed", "Plan Ready", "Approved", "Success"}:
+        return "chip-success"
+    if normalized in {"Pending", "Awaiting Approval", "Running", "In Progress"}:
+        return "chip-warning"
+    if normalized in {"Blocked", "Failed", "Rejected"}:
+        return "chip-danger"
+    return "chip-status"
+
+
+def employee_option_label(employee):
+    return (
+        f"{employee.get('employee_name', 'Unknown')} · "
+        f"{employee.get('role', 'Role')} · "
+        f"{employee.get('employee_id', '')}"
+    )
+
+
+def build_employee_options(employees):
+    return {
+        employee_option_label(employee): employee["employee_id"]
+        for employee in employees
+    }
+
+
+def render_section(kicker, title):
+    st.markdown(
+        f"""
+        <div class="section-kicker">{escape(kicker)}</div>
+        <div class="section-title">{escape(title)}</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_empty_state(title, message):
+    st.markdown(
+        f"""
+        <div class="empty-state">
+            <div class="empty-title">{escape(title)}</div>
+            <div>{escape(message)}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_error_state(title, message):
+    st.markdown(
+        f"""
+        <div class="error-box">
+            <strong>{escape(title)}</strong>
+            <br />
+            {escape(message)}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def get_latest_joining(employees):
+    dates = [employee.get("joining_date") for employee in employees if employee.get("joining_date")]
+    return max(dates) if dates else "—"
+
+
 def render_metric_strip(employees, approvals):
     status_counts = Counter(employee.get("onboarding_status") for employee in employees)
     pending = status_counts.get("PENDING", 0)
@@ -304,48 +491,80 @@ def render_metric_strip(employees, approvals):
         for approval in approvals
         if approval.get("approval_status") == "Awaiting Approval"
     )
+    open_tasks_label = "Use Ops"
+    latest_joining = get_latest_joining(employees)
+    selected_metric = st.session_state.get("selected_metric", "Employees")
+    metrics = [
+        ("Employees", len(employees), "Directory records"),
+        ("Pending Plans", pending, "Need plan generation"),
+        ("Plans Ready", ready, "Ready for execution"),
+        ("Latest Joining", latest_joining, "Newest start date"),
+        ("Approval Queue", awaiting, "Waiting for review"),
+        ("Open Tasks", open_tasks_label, "Tracked in Operations"),
+    ]
+
+    metric_markup = []
+    for label, value, help_text in metrics:
+        active_class = " metric-tile-active" if selected_metric == label else ""
+        metric_markup.append(
+            (
+                f'<div class="metric-tile{active_class}">'
+                f'<div class="metric-label">{escape(label)}</div>'
+                f'<div class="metric-value">{escape(str(value))}</div>'
+                f'<div class="metric-help">{escape(help_text)}</div>'
+                "</div>"
+            )
+        )
 
     st.markdown(
-        f"""
-        <div class="metric-strip">
-            <div class="metric-tile">
-                <div class="metric-label">Employees</div>
-                <div class="metric-value">{len(employees)}</div>
-            </div>
-            <div class="metric-tile">
-                <div class="metric-label">Pending Plans</div>
-                <div class="metric-value">{pending}</div>
-            </div>
-            <div class="metric-tile">
-                <div class="metric-label">Plans Ready</div>
-                <div class="metric-value">{ready}</div>
-            </div>
-            <div class="metric-tile">
-                <div class="metric-label">Awaiting Approval</div>
-                <div class="metric-value">{awaiting}</div>
-            </div>
-        </div>
-        """,
+        f'<div class="metric-strip">{"".join(metric_markup)}</div>',
         unsafe_allow_html=True,
     )
 
+    metric_columns = st.columns(6)
+    for column, (label, _value, _help_text) in zip(metric_columns, metrics):
+        with column:
+            if st.button(
+                f"View {label}",
+                key=f"metric_{label}",
+                use_container_width=True,
+            ):
+                st.session_state["selected_metric"] = label
 
-def render_employee_panel(employee):
+
+def render_employee_panel(employee, action_label=None, action_key=None):
+    status = format_status(employee.get("onboarding_status"))
+    status_class = chip_class_for_status(status)
     st.markdown(
         f"""
         <div class="employee-panel">
-            <div class="employee-name">{escape(employee.get("employee_name", "Unknown employee"))}</div>
-            <div class="employee-meta">
-                {escape(employee.get("employee_id", ""))} · {escape(employee.get("role", ""))}
-                · {escape(employee.get("department", ""))}
-                <br />
-                {escape(employee.get("employee_email", ""))} · Joining {escape(employee.get("joining_date", ""))}
-                · {escape(format_status(employee.get("onboarding_status")))}
+            <div class="employee-row">
+                <div>
+                    <div class="employee-name">{escape(employee.get("employee_name", "Unknown employee"))}</div>
+                    <div class="employee-meta">
+                        {escape(employee.get("role", "Role not set"))} · {escape(employee.get("department", "Department not set"))}
+                        <br />
+                        {escape(employee.get("employee_email", ""))}
+                    </div>
+                </div>
+                <span class="chip {status_class}">{escape(status)}</span>
+            </div>
+            <div class="chip-row">
+                <span class="chip">{escape(employee.get("employee_id", ""))}</span>
+                <span class="chip">Joining {escape(employee.get("joining_date", "Not set"))}</span>
             </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    if action_label and action_key:
+        if st.button(
+            action_label,
+            key=action_key,
+            use_container_width=True,
+        ):
+            st.session_state["workspace_employee_id"] = employee["employee_id"]
+            st.session_state["selected_metric"] = "Employees"
 
 
 def render_task_card(task, enforcement=None):
@@ -356,19 +575,23 @@ def render_task_card(task, enforcement=None):
         "low": "chip-low",
     }.get(priority, "")
     approval_label = "Approval required" if task.get("approval_required") else "No approval"
+    status_class = chip_class_for_status(task.get("task_status"))
     lock_chip = ""
+    card_state_class = ""
     if enforcement:
         if enforcement.get("is_locked"):
             lock_chip = '<span class="chip chip-locked">Locked</span>'
+            card_state_class = " task-card-locked"
         else:
             lock_chip = '<span class="chip chip-unlocked">Unlocked</span>'
+            card_state_class = " task-card-ready"
 
     st.markdown(
         f"""
-        <div class="task-card">
+        <div class="task-card{card_state_class}">
             <div class="task-title-row">
                 <div class="task-title">{escape(task.get("task_name", "Untitled task"))}</div>
-                <span class="chip chip-status">{escape(format_status(task.get("task_status")))}</span>
+                <span class="chip {status_class}">{escape(format_status(task.get("task_status")))}</span>
             </div>
             <div class="task-description">{escape(task.get("task_description", "No description provided."))}</div>
             <div class="chip-row">
@@ -386,9 +609,9 @@ def render_task_card(task, enforcement=None):
 def render_tasks(data):
     tasks = data.get("tasks", [])
     if not tasks:
-        st.markdown(
-            '<div class="empty-state">No onboarding tasks have been generated yet.</div>',
-            unsafe_allow_html=True,
+        render_empty_state(
+            "No tasks yet",
+            "Generate an onboarding plan to create task work items.",
         )
         return
 
@@ -424,16 +647,28 @@ def render_tasks(data):
     )
 
     for task in tasks:
-        render_task_card(task)
+        enforcement = None
+        dependency_data = None
+        dependency_error = None
+        if task.get("task_id"):
+            dependency_data, dependency_error = fetch_task_dependencies(task["task_id"])
+            enforcement = dependency_data.get("enforcement", {}) if dependency_data else {}
+        render_task_card(task, enforcement=enforcement)
+        if dependency_error:
+            st.caption(f"Dependency state unavailable: {dependency_error}")
+        elif dependency_data:
+            render_dependency_summary(task, data=dependency_data)
 
 
 def render_approval_card(approval):
+    status = approval.get("approval_status", "Awaiting Approval")
+    status_class = chip_class_for_status(status)
     st.markdown(
         f"""
         <div class="task-card">
             <div class="task-title-row">
                 <div class="task-title">{escape(approval.get("action_type", "Approval request"))}</div>
-                <span class="chip chip-status">{escape(approval.get("approval_status", "Awaiting Approval"))}</span>
+                <span class="chip {status_class}">{escape(status)}</span>
             </div>
             <div class="task-description">
                 Employee: {escape(approval.get("employee_id", ""))}
@@ -474,7 +709,7 @@ def render_dependency_summary(task, data=None, error=None):
     if not dependencies:
         st.markdown(
             f"""
-            <div class="dependency-state">
+            <div class="dependency-state {'dependency-locked' if enforcement.get("is_locked") else 'dependency-ready'}">
                 Dependency state: {escape(state_label)}
                 <br />
                 {reason_markup}
@@ -492,7 +727,7 @@ def render_dependency_summary(task, data=None, error=None):
 
     st.markdown(
         f"""
-        <div class="dependency-state">
+        <div class="dependency-state {'dependency-locked' if enforcement.get("is_locked") else 'dependency-ready'}">
             Dependency state: {escape(state_label)}
             <br />
             {"<br />".join(dependency_lines)}
@@ -513,19 +748,20 @@ def render_timeline(employee_id):
 
     events = data.get("events", [])
     if not events:
-        st.markdown(
-            '<div class="empty-state">No workflow history has been recorded yet.</div>',
-            unsafe_allow_html=True,
+        render_empty_state(
+            "No timeline yet",
+            "Workflow events will appear after plans, approvals, or task updates.",
         )
         return
 
     for event in events[:8]:
+        status_class = chip_class_for_status(event.get("event_status", "Success"))
         st.markdown(
             f"""
-            <div class="task-card">
+            <div class="task-card timeline-item">
                 <div class="task-title-row">
                     <div class="task-title">{escape(event.get("event_type", "event").replace("_", " ").title())}</div>
-                    <span class="chip chip-status">{escape(event.get("event_status", "Success"))}</span>
+                    <span class="chip {status_class}">{escape(event.get("event_status", "Success"))}</span>
                 </div>
                 <div class="task-description">
                     {escape(event.get("event_message", ""))}
@@ -538,17 +774,17 @@ def render_timeline(employee_id):
         )
 
 
-def render_workflow_runs_panel():
+def render_workflow_runs_panel(key_prefix="workflow"):
     workflow_runs, error = fetch_workflow_runs()
     if error:
-        st.warning(f"Could not load workflow runs. {error}")
+        render_error_state("Workflow runs unavailable", error)
         return
 
-    st.subheader("Recent Workflow Runs")
+    render_section("Observability", "Recent Workflow Runs")
     if not workflow_runs:
-        st.markdown(
-            '<div class="empty-state">No workflow runs have been recorded yet.</div>',
-            unsafe_allow_html=True,
+        render_empty_state(
+            "No workflow runs",
+            "Workflow executions will appear after generating an onboarding plan.",
         )
         return
 
@@ -561,7 +797,7 @@ def render_workflow_runs_panel():
     selected_label = st.selectbox(
         "Workflow run",
         options=list(run_options.keys()),
-        key="workflow_run_select",
+        key=f"{key_prefix}_workflow_run_select",
     )
     selected_run_id = run_options.get(selected_label)
 
@@ -570,18 +806,19 @@ def render_workflow_runs_panel():
 
     data, detail_error = fetch_workflow_run(selected_run_id)
     if detail_error:
-        st.warning(f"Could not load workflow run details. {detail_error}")
+        render_error_state("Could not load workflow run details", detail_error)
         return
 
     workflow_run = data.get("workflow_run", {})
     agent_runs = data.get("agent_runs", [])
+    status_class = chip_class_for_status(workflow_run.get("workflow_status"))
 
     st.markdown(
         f"""
-        <div class="task-card">
+        <div class="workflow-card">
             <div class="task-title-row">
                 <div class="task-title">{escape(workflow_run.get("workflow_run_id", ""))}</div>
-                <span class="chip chip-status">{escape(workflow_run.get("workflow_status", ""))}</span>
+                <span class="chip {status_class}">{escape(workflow_run.get("workflow_status", ""))}</span>
             </div>
             <div class="task-description">
                 Employee: {escape(workflow_run.get("employee_id", ""))}
@@ -595,15 +832,24 @@ def render_workflow_runs_panel():
         unsafe_allow_html=True,
     )
 
+    if not agent_runs:
+        render_empty_state(
+            "No agent history",
+            "Agent execution summaries were not recorded for this workflow run.",
+        )
+        return
+
     for agent_run in agent_runs:
+        status_class = chip_class_for_status(agent_run.get("execution_status"))
         st.markdown(
             f"""
-            <div class="task-card">
+            <div class="task-card agent-step">
                 <div class="task-title-row">
                     <div class="task-title">{escape(agent_run.get("agent_name", ""))}</div>
-                    <span class="chip chip-status">{escape(agent_run.get("execution_status", ""))}</span>
+                    <span class="chip {status_class}">{escape(agent_run.get("execution_status", ""))}</span>
                 </div>
                 <div class="task-description">
+                    Step {escape(str(agent_run.get("execution_order", "")))} ·
                     {escape(agent_run.get("output_summary", ""))}
                 </div>
             </div>
@@ -613,19 +859,22 @@ def render_workflow_runs_panel():
 
 
 def render_create_tab():
-    st.subheader("New Employee")
+    render_section("Employee Setup", "New Employee")
     with st.form("create_employee_form", clear_on_submit=False):
-        employee_name = st.text_input("Full name", placeholder="Sarah Chen")
-        employee_email = st.text_input(
-            "Work email",
-            placeholder="sarah.chen@company.com",
-        )
-        role = st.text_input("Role", placeholder="Data Engineer")
-        department = st.text_input(
-            "Department",
-            placeholder="Platform Engineering",
-        )
-        joining_date = st.date_input("Joining date", value=date.today())
+        left, right = st.columns(2)
+        with left:
+            employee_name = st.text_input("Full name", placeholder="Sarah Chen")
+            employee_email = st.text_input(
+                "Work email",
+                placeholder="sarah.chen@company.com",
+            )
+            joining_date = st.date_input("Joining date", value=date.today())
+        with right:
+            role = st.text_input("Role", placeholder="Data Engineer")
+            department = st.text_input(
+                "Department",
+                placeholder="Platform Engineering",
+            )
 
         submitted = st.form_submit_button(
             "Create Employee",
@@ -658,7 +907,7 @@ def render_create_tab():
     data, error = request_api("POST", "/employees", json=payload)
 
     if error:
-        st.error(f"Failed to create employee. {error}")
+        render_error_state("Failed to create employee", error)
         return
 
     st.cache_data.clear()
@@ -668,11 +917,13 @@ def render_create_tab():
 
 
 def render_generate_tab(employees):
-    st.subheader("Generate Onboarding Plan")
-    employee_options = {
-        f"{employee['employee_name']} · {employee['employee_id']}": employee["employee_id"]
-        for employee in employees
-    }
+    render_section("Planning", "Generate Onboarding Plan")
+    if not employees:
+        render_empty_state(
+            "No employees available",
+            "Create an employee before generating an onboarding plan.",
+        )
+    employee_options = build_employee_options(employees)
     selected_label = st.selectbox(
         "Choose an employee",
         options=list(employee_options.keys()),
@@ -702,11 +953,12 @@ def render_generate_tab(employees):
             )
 
         if error:
-            st.error(f"Failed to generate onboarding plan. {error}")
+            render_error_state("Failed to generate onboarding plan", error)
             return
 
         st.cache_data.clear()
         st.success("Onboarding plan is ready.")
+        st.caption(f"Workflow run: {data.get('workflow_run_id', 'Not recorded')}")
         render_tasks(data)
         with st.expander("Workflow details"):
             st.json(
@@ -721,11 +973,13 @@ def render_generate_tab(employees):
 
 
 def render_tasks_tab(employees):
-    st.subheader("Task Review")
-    employee_options = {
-        f"{employee['employee_name']} · {employee['employee_id']}": employee["employee_id"]
-        for employee in employees
-    }
+    render_section("Task Review", "Employee Tasks")
+    if not employees:
+        render_empty_state(
+            "No employees available",
+            "Create an employee before reviewing task plans.",
+        )
+    employee_options = build_employee_options(employees)
     selected_label = st.selectbox(
         "Employee",
         options=list(employee_options.keys()),
@@ -749,7 +1003,7 @@ def render_tasks_tab(employees):
 
         data, error = fetch_tasks(task_employee_id)
         if error:
-            st.error(f"Could not fetch tasks. {error}")
+            render_error_state("Could not fetch tasks", error)
             return
 
         employee = data.get("employee")
@@ -758,11 +1012,164 @@ def render_tasks_tab(employees):
         render_tasks(data)
 
 
+def render_employee_workspace(employees):
+    render_section("Workspace", "Employee Operating View")
+    if not employees:
+        render_empty_state(
+            "No employee selected",
+            "Create an employee before opening the workspace.",
+        )
+        return
+
+    employee_options = build_employee_options(employees)
+    preferred_employee_id = st.session_state.get("workspace_employee_id", "")
+    option_values = list(employee_options.values())
+    default_index = (
+        option_values.index(preferred_employee_id)
+        if preferred_employee_id in option_values
+        else 0
+    )
+    selected_label = st.selectbox(
+        "Employee",
+        options=list(employee_options.keys()),
+        index=default_index,
+        key="workspace_employee_select",
+    )
+    selected_employee_id = employee_options.get(selected_label, "")
+    if not selected_employee_id:
+        render_empty_state(
+            "No employee selected",
+            "Select an employee to open their workspace.",
+        )
+        return
+
+    st.session_state["workspace_employee_id"] = selected_employee_id
+    selected_employee = next(
+        (
+            employee
+            for employee in employees
+            if employee.get("employee_id") == selected_employee_id
+        ),
+        None,
+    )
+
+    profile_tab, plan_tab, tasks_tab, approvals_tab, timeline_tab = st.tabs(
+        ["Profile", "Onboarding Plan", "Tasks", "Approvals", "Workflow"]
+    )
+
+    with profile_tab:
+        if selected_employee:
+            render_employee_panel(selected_employee)
+            with st.expander("Edit employee profile"):
+                with st.form(f"edit_employee_{selected_employee_id}"):
+                    left, right = st.columns(2)
+                    with left:
+                        employee_name = st.text_input(
+                            "Full name",
+                            value=selected_employee.get("employee_name", ""),
+                        )
+                        employee_email = st.text_input(
+                            "Work email",
+                            value=selected_employee.get("employee_email", ""),
+                        )
+                        joining_date = st.date_input(
+                            "Joining date",
+                            value=parse_joining_date(
+                                selected_employee.get("joining_date")
+                            ),
+                        )
+                    with right:
+                        role = st.text_input(
+                            "Role",
+                            value=selected_employee.get("role", ""),
+                        )
+                        department = st.text_input(
+                            "Department",
+                            value=selected_employee.get("department", ""),
+                        )
+                    submitted = st.form_submit_button(
+                        "Save Profile",
+                        type="primary",
+                        use_container_width=True,
+                    )
+                if submitted:
+                    payload = {
+                        "employee_name": employee_name.strip(),
+                        "employee_email": employee_email.strip(),
+                        "role": role.strip(),
+                        "department": department.strip(),
+                        "joining_date": joining_date.isoformat(),
+                    }
+                    data, error = request_api(
+                        "PUT",
+                        f"/employees/{selected_employee_id}",
+                        json=payload,
+                    )
+                    if error:
+                        render_error_state("Could not save profile", error)
+                    else:
+                        st.cache_data.clear()
+                        st.success("Employee profile saved.")
+                        render_employee_panel(data.get("employee", {}))
+
+    with plan_tab:
+        if st.button(
+            "Generate or Continue Plan",
+            type="primary",
+            use_container_width=True,
+            key=f"workspace_generate_{selected_employee_id}",
+        ):
+            with st.spinner("Running onboarding workflow..."):
+                data, error = request_api(
+                    "POST",
+                    f"/employees/{selected_employee_id}/generate-onboarding-plan",
+                    timeout=90,
+                )
+            if error:
+                render_error_state("Could not generate plan", error)
+            else:
+                st.cache_data.clear()
+                st.success("Onboarding plan is ready.")
+                st.caption(f"Workflow run: {data.get('workflow_run_id', 'Not recorded')}")
+                render_tasks(data)
+
+    with tasks_tab:
+        data, error = fetch_tasks(selected_employee_id)
+        if error:
+            render_error_state("Could not load tasks", error)
+        else:
+            render_tasks(data)
+
+    with approvals_tab:
+        approvals, error = fetch_approvals()
+        if error:
+            render_error_state("Could not load approvals", error)
+        else:
+            employee_approvals = [
+                approval
+                for approval in approvals
+                if approval.get("employee_id") == selected_employee_id
+            ]
+            if not employee_approvals:
+                render_empty_state(
+                    "No approvals for this employee",
+                    "Approval-required tasks will appear here after plan generation.",
+                )
+            for approval in employee_approvals:
+                render_approval_card(approval)
+
+    with timeline_tab:
+        render_timeline(selected_employee_id)
+        st.divider()
+        render_workflow_runs_panel(key_prefix="workspace")
+
+
 def render_operations_tab(employees, all_approvals):
     pending_approvals, approval_error = fetch_approvals("Awaiting Approval")
     pending_count = len(pending_approvals)
     reviewed_count = max(len(all_approvals) - pending_count, 0)
 
+    render_section("Operations", "Workflow Command Center")
     st.markdown(
         f"""
         <div class="metric-strip">
@@ -790,13 +1197,13 @@ def render_operations_tab(employees, all_approvals):
     approval_column, task_column = st.columns([1, 1], gap="large")
 
     with approval_column:
-        st.subheader("Approval Queue")
+        render_section("Human Review", "Approval Queue")
         if approval_error:
-            st.error(f"Could not load approvals. {approval_error}")
+            render_error_state("Could not load approvals", approval_error)
         elif not pending_approvals:
-            st.markdown(
-                '<div class="empty-state">No approval requests are waiting for review.</div>',
-                unsafe_allow_html=True,
+            render_empty_state(
+                "No approvals waiting",
+                "Approval-required tasks will appear here after plan generation.",
             )
         else:
             for approval in pending_approvals:
@@ -808,15 +1215,16 @@ def render_operations_tab(employees, all_approvals):
                 )
                 decision_columns = st.columns(3)
                 decisions = [
-                    ("Approve", "Approved"),
-                    ("Reject", "Rejected"),
-                    ("Revise", "Revision Requested"),
+                    ("Approve", "Approved", "primary"),
+                    ("Reject", "Rejected", "secondary"),
+                    ("Request Revision", "Revision Requested", "secondary"),
                 ]
-                for column, (label, status) in zip(decision_columns, decisions):
+                for column, (label, status, button_type) in zip(decision_columns, decisions):
                     with column:
                         if st.button(
                             label,
                             key=f"approval_{status}_{approval['approval_id']}",
+                            type=button_type,
                             use_container_width=True,
                         ):
                             payload = {
@@ -830,18 +1238,15 @@ def render_operations_tab(employees, all_approvals):
                                 json=payload,
                             )
                             if error:
-                                st.error(f"Could not save decision. {error}")
+                                render_error_state("Could not save decision", error)
                             else:
                                 st.cache_data.clear()
                                 st.success("Approval decision saved.")
                                 st.rerun()
 
     with task_column:
-        st.subheader("Task Status")
-        employee_options = {
-            f"{employee['employee_name']} · {employee['employee_id']}": employee["employee_id"]
-            for employee in employees
-        }
+        render_section("Execution", "Task Status")
+        employee_options = build_employee_options(employees)
         selected_label = st.selectbox(
             "Employee",
             options=list(employee_options.keys()),
@@ -852,22 +1257,22 @@ def render_operations_tab(employees, all_approvals):
         selected_employee_id = employee_options.get(selected_label, "")
 
         if not selected_employee_id:
-            st.markdown(
-                '<div class="empty-state">Create or select an employee to update task status.</div>',
-                unsafe_allow_html=True,
+            render_empty_state(
+                "No employee selected",
+                "Select an employee to review tasks, blockers, and status updates.",
             )
             return
 
         data, error = fetch_tasks(selected_employee_id)
         if error:
-            st.error(f"Could not load tasks. {error}")
+            render_error_state("Could not load tasks", error)
             return
 
         tasks = data.get("tasks", [])
         if not tasks:
-            st.markdown(
-                '<div class="empty-state">No tasks found for this employee.</div>',
-                unsafe_allow_html=True,
+            render_empty_state(
+                "No tasks found",
+                "Generate an onboarding plan before updating task status.",
             )
             return
 
@@ -909,43 +1314,65 @@ def render_operations_tab(employees, all_approvals):
                     json={"task_status": status},
                 )
                 if status_error:
-                    st.error(f"Could not update task. {status_error}")
+                    render_error_state("Could not update task", status_error)
                 else:
                     st.cache_data.clear()
                     st.success("Task status updated.")
                     st.rerun()
 
-        st.subheader("Workflow Timeline")
+        render_section("Audit Trail", "Workflow Timeline")
         render_timeline(selected_employee_id)
 
     st.divider()
-    render_workflow_runs_panel()
+    render_workflow_runs_panel(key_prefix="operations")
 
 
 def render_directory_tab(employees):
-    st.subheader("Employee Directory")
+    render_section("Directory", "Employee Records")
     if not employees:
-        st.markdown(
-            '<div class="empty-state">No employees have been created yet.</div>',
-            unsafe_allow_html=True,
+        render_empty_state(
+            "No employees yet",
+            "Create your first employee record to start onboarding operations.",
         )
         return
 
     for employee in employees:
-        render_employee_panel(employee)
+        render_employee_panel(
+            employee,
+            action_label="Open Workspace",
+            action_key=f"open_workspace_{employee['employee_id']}",
+        )
 
 
 inject_styles()
 
 with st.sidebar:
-    st.subheader("Backend")
+    st.subheader("Onboarding Buddy")
+    st.caption("Workflow Operations MVP")
     health, health_error = request_api("GET", "/health", timeout=5)
     if health_error:
-        st.error("API offline")
-        st.caption(health_error)
+        st.markdown(
+            """
+            <span class="status-pill status-offline">
+                <span class="status-dot" style="background:#b91c1c"></span>
+                API offline
+            </span>
+            """,
+            unsafe_allow_html=True,
+        )
+        with st.expander("Connection details"):
+            st.caption(health_error)
     else:
-        st.success("API online")
-        st.caption(f"{API_BASE_URL}")
+        st.markdown(
+            """
+            <span class="status-pill status-online">
+                <span class="status-dot" style="background:#15803d"></span>
+                API online
+            </span>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.caption(API_BASE_URL)
 
     if st.button("Refresh data", use_container_width=True):
         st.cache_data.clear()
@@ -967,15 +1394,18 @@ employees, employees_error = fetch_employees()
 approvals, approvals_error = fetch_approvals()
 
 if employees_error:
-    st.warning(f"Could not load recent employees. {employees_error}")
+    render_error_state("Could not load employees", employees_error)
 if approvals_error:
-    st.warning(f"Could not load approvals. {approvals_error}")
+    render_error_state("Could not load approvals", approvals_error)
 
 render_metric_strip(employees, approvals)
 
-tab_create, tab_generate, tab_tasks, tab_operations, tab_directory = st.tabs(
-    ["Create", "Generate Plan", "Tasks", "Operations", "Directory"]
+tab_workspace, tab_create, tab_generate, tab_tasks, tab_operations, tab_directory = st.tabs(
+    ["Workspace", "Create", "Generate Plan", "Tasks", "Operations", "Directory"]
 )
+
+with tab_workspace:
+    render_employee_workspace(employees)
 
 with tab_create:
     render_create_tab()
