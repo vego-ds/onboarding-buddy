@@ -163,4 +163,12 @@ def update_approval_decision(
         ),
     )
 
+    if approval_status == "Approved" and approval.get("related_task_id"):
+        from database.repositories.task_repository import refresh_task_lock_state
+
+        refresh_task_lock_state(
+            approval["related_task_id"],
+            trigger="approval decision",
+        )
+
     return approval

@@ -208,10 +208,88 @@ def test_task_cannot_start_until_dependency_is_completed(memory_connection):
     with pytest.raises(ValueError, match="Collect documents is Pending"):
         task_repository.update_task_status(second_task["task_id"], "In Progress")
 
+    blocked_task = task_repository.get_task_by_id(second_task["task_id"])
+    assert blocked_task["task_status"] == "Blocked"
+
     task_repository.update_task_status(first_task["task_id"], "Completed")
+    unlocked_task = task_repository.get_task_by_id(second_task["task_id"])
+    assert unlocked_task["task_status"] == "Pending"
+
     updated = task_repository.update_task_status(second_task["task_id"], "In Progress")
 
     assert updated["task_status"] == "In Progress"
+
+
+def test_task_dependency_creation_is_idempotent(memory_connection):
+    first_task = task_repository.create_task(
+        "EMP_1",
+        {
+            "task_name": "Collect documents",
+            "task_description": "Collect required documents.",
+        },
+    )
+    second_task = task_repository.create_task(
+        "EMP_1",
+        {
+            "task_name": "Prepare access",
+            "task_description": "Prepare role access.",
+        },
+    )
+
+    first_dependency = dependency_repository.create_task_dependency(
+        employee_id="EMP_1",
+        task_id=second_task["task_id"],
+        depends_on_task_id=first_task["task_id"],
+    )
+    second_dependency = dependency_repository.create_task_dependency(
+        employee_id="EMP_1",
+        task_id=second_task["task_id"],
+        depends_on_task_id=first_task["task_id"],
+    )
+
+    dependencies = dependency_repository.get_dependencies_for_task(
+        second_task["task_id"]
+    )
+
+    assert first_dependency["dependency_id"] == second_dependency["dependency_id"]
+    assert len(dependencies) == 1
+
+
+def test_task_enforcement_state_reports_lock_reasons(memory_connection):
+    first_task = task_repository.create_task(
+        "EMP_1",
+        {
+            "task_name": "Collect documents",
+            "task_description": "Collect required documents.",
+        },
+    )
+    second_task = task_repository.create_task(
+        "EMP_1",
+        {
+            "task_name": "Prepare access",
+            "task_description": "Prepare role access.",
+            "approval_required": True,
+        },
+    )
+    dependency_repository.create_task_dependency(
+        employee_id="EMP_1",
+        task_id=second_task["task_id"],
+        depends_on_task_id=first_task["task_id"],
+    )
+    approval_repository.create_approval(
+        employee_id="EMP_1",
+        related_task_id=second_task["task_id"],
+        action_type="Review task",
+    )
+
+    enforcement = task_repository.get_task_enforcement_state(second_task["task_id"])
+
+    assert enforcement["is_locked"] is True
+    assert enforcement["can_start"] is False
+    assert enforcement["dependency_count"] == 1
+    assert enforcement["blocked_dependency_count"] == 1
+    assert "approval is Awaiting Approval" in enforcement["lock_reasons"]
+    assert "Collect documents is Pending" in enforcement["lock_reasons"]
 
 
 def test_approval_required_task_cannot_start_until_approved(memory_connection):
@@ -232,13 +310,48 @@ def test_approval_required_task_cannot_start_until_approved(memory_connection):
     with pytest.raises(ValueError, match="approval is Awaiting Approval"):
         task_repository.update_task_status(task["task_id"], "In Progress")
 
+    blocked_task = task_repository.get_task_by_id(task["task_id"])
+    assert blocked_task["task_status"] == "Blocked"
+
     approval_repository.update_approval_decision(
         approval["approval_id"],
         approval_status="Approved",
     )
+    unlocked_task = task_repository.get_task_by_id(task["task_id"])
+    assert unlocked_task["task_status"] == "Pending"
+
     updated = task_repository.update_task_status(task["task_id"], "In Progress")
 
     assert updated["task_status"] == "In Progress"
+
+
+def test_blocked_and_unlocked_tasks_write_timeline_events(memory_connection):
+    task = task_repository.create_task(
+        "EMP_1",
+        {
+            "task_name": "Provision admin access",
+            "task_description": "Provision admin access.",
+            "approval_required": True,
+        },
+    )
+    approval = approval_repository.create_approval(
+        employee_id="EMP_1",
+        related_task_id=task["task_id"],
+        action_type="Review task",
+    )
+
+    with pytest.raises(ValueError, match="approval is Awaiting Approval"):
+        task_repository.update_task_status(task["task_id"], "In Progress")
+
+    approval_repository.update_approval_decision(
+        approval["approval_id"],
+        approval_status="Approved",
+    )
+    logs = audit_repository.get_audit_logs(employee_id="EMP_1")
+    event_types = [log["event_type"] for log in logs]
+
+    assert "task_start_blocked" in event_types
+    assert "task_unlocked" in event_types
 
 
 def test_task_status_update_writes_audit_log(memory_connection):

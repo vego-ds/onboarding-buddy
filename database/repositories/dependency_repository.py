@@ -105,3 +105,27 @@ def get_dependencies_for_task(task_id):
         rows = connection.execute(query, (task_id,)).fetchall()
 
     return [dict(row) for row in rows]
+
+
+def get_downstream_tasks(task_id):
+    query = """
+    SELECT
+        dependency.dependency_id,
+        dependency.employee_id,
+        dependency.task_id,
+        dependency.depends_on_task_id,
+        dependency.created_at,
+        downstream.task_name,
+        downstream.task_status,
+        downstream.approval_required
+    FROM task_dependencies dependency
+    JOIN onboarding_tasks downstream
+        ON downstream.task_id = dependency.task_id
+    WHERE dependency.depends_on_task_id = ?
+    ORDER BY dependency.created_at ASC
+    """
+
+    with get_connection() as connection:
+        rows = connection.execute(query, (task_id,)).fetchall()
+
+    return [dict(row) for row in rows]

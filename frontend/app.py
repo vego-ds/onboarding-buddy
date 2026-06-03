@@ -146,6 +146,16 @@ def inject_styles():
         .chip-medium { background: var(--amber-soft); }
         .chip-low { background: var(--blue-soft); }
         .chip-status { background: var(--accent-soft); }
+        .chip-locked { background: var(--danger-soft); }
+        .chip-unlocked { background: var(--accent-soft); }
+        .dependency-state {
+            border-left: 3px solid var(--line);
+            color: var(--muted);
+            font-size: 0.86rem;
+            line-height: 1.45;
+            margin: 0.55rem 0 0.8rem;
+            padding-left: 0.75rem;
+        }
         .empty-state {
             color: var(--muted);
             padding: 1.1rem;
@@ -338,7 +348,7 @@ def render_employee_panel(employee):
     )
 
 
-def render_task_card(task):
+def render_task_card(task, enforcement=None):
     priority = str(task.get("task_priority", "Medium")).lower()
     priority_class = {
         "high": "chip-high",
@@ -346,6 +356,12 @@ def render_task_card(task):
         "low": "chip-low",
     }.get(priority, "")
     approval_label = "Approval required" if task.get("approval_required") else "No approval"
+    lock_chip = ""
+    if enforcement:
+        if enforcement.get("is_locked"):
+            lock_chip = '<span class="chip chip-locked">Locked</span>'
+        else:
+            lock_chip = '<span class="chip chip-unlocked">Unlocked</span>'
 
     st.markdown(
         f"""
@@ -359,6 +375,7 @@ def render_task_card(task):
                 <span class="chip {priority_class}">{escape(str(task.get("task_priority", "Medium")))}</span>
                 <span class="chip">Owner: {escape(str(task.get("assigned_owner", "Unassigned")))}</span>
                 <span class="chip">{approval_label}</span>
+                {lock_chip}
             </div>
         </div>
         """,
@@ -433,21 +450,59 @@ def render_approval_card(approval):
     )
 
 
-def render_dependency_summary(task):
-    data, error = fetch_task_dependencies(task["task_id"])
+def render_dependency_summary(task, data=None, error=None):
+    if data is None and error is None:
+        data, error = fetch_task_dependencies(task["task_id"])
+
     if error:
         st.warning(f"Could not load dependencies. {error}")
-        return
+        return None
 
     dependencies = data.get("dependencies", [])
-    if not dependencies:
-        st.caption("No upstream dependencies.")
-        return
+    enforcement = data.get("enforcement", {})
+    lock_reasons = enforcement.get("lock_reasons", [])
+    state_label = "Locked" if enforcement.get("is_locked") else "Unlocked"
 
+    reason_markup = ""
+    if lock_reasons:
+        reason_markup = "<br />".join(
+            f"Blocked by: {escape(reason)}" for reason in lock_reasons
+        )
+    else:
+        reason_markup = "Ready to start."
+
+    if not dependencies:
+        st.markdown(
+            f"""
+            <div class="dependency-state">
+                Dependency state: {escape(state_label)}
+                <br />
+                {reason_markup}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        return enforcement
+
+    dependency_lines = []
     for dependency in dependencies:
-        status = dependency.get("depends_on_task_status", "Unknown")
-        name = dependency.get("depends_on_task_name", "Upstream task")
-        st.caption(f"Depends on: {name} ({status})")
+        status = escape(dependency.get("depends_on_task_status", "Unknown"))
+        name = escape(dependency.get("depends_on_task_name", "Upstream task"))
+        dependency_lines.append(f"Depends on: {name} ({status})")
+
+    st.markdown(
+        f"""
+        <div class="dependency-state">
+            Dependency state: {escape(state_label)}
+            <br />
+            {"<br />".join(dependency_lines)}
+            <br />
+            {reason_markup}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    return enforcement
 
 
 def render_timeline(employee_id):
@@ -818,14 +873,28 @@ def render_operations_tab(employees, all_approvals):
 
         valid_statuses = ["Pending", "In Progress", "Completed", "Blocked", "Failed"]
         for task in tasks:
-            render_task_card(task)
-            render_dependency_summary(task)
+            dependency_data, dependency_error = fetch_task_dependencies(task["task_id"])
+            enforcement = dependency_data.get("enforcement", {}) if dependency_data else {}
+            render_task_card(task, enforcement=enforcement)
+            if dependency_error:
+                st.warning(f"Could not load dependencies. {dependency_error}")
+            else:
+                render_dependency_summary(
+                    task,
+                    data=dependency_data,
+                    error=dependency_error,
+                )
             current_status = task.get("task_status", "Pending")
+            status_options = valid_statuses
+            if enforcement.get("is_locked") and current_status != "In Progress":
+                status_options = [
+                    option for option in valid_statuses if option != "In Progress"
+                ]
             status = st.selectbox(
                 "Update status",
-                options=valid_statuses,
-                index=valid_statuses.index(current_status)
-                if current_status in valid_statuses
+                options=status_options,
+                index=status_options.index(current_status)
+                if current_status in status_options
                 else 0,
                 key=f"task_status_{task['task_id']}",
             )

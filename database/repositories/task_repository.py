@@ -3,7 +3,10 @@ from uuid import uuid4
 
 from database.repositories.approval_repository import get_approval_by_task_id
 from database.repositories.audit_repository import create_audit_log
-from database.repositories.dependency_repository import get_dependencies_for_task
+from database.repositories.dependency_repository import (
+    get_dependencies_for_task,
+    get_downstream_tasks,
+)
 from database.db import get_connection
 
 VALID_TASK_STATUSES = {"Pending", "In Progress", "Completed", "Blocked", "Failed"}
@@ -89,20 +92,7 @@ def get_task_by_id(task_id):
     return dict(row)
 
 
-def update_task_status(task_id, task_status):
-    if task_status not in VALID_TASK_STATUSES:
-        raise ValueError(f"Invalid task status: {task_status}")
-
-    existing_task = get_task_by_id(task_id)
-
-    if existing_task is None:
-        return None
-
-    if task_status == "In Progress":
-        blockers = get_task_start_blockers(existing_task)
-        if blockers:
-            raise ValueError("Task cannot start yet: " + "; ".join(blockers))
-
+def set_task_status(task_id, task_status):
     now = datetime.now(UTC).isoformat()
     query = """
     UPDATE onboarding_tasks
@@ -114,7 +104,37 @@ def update_task_status(task_id, task_status):
         cursor = connection.execute(query, (task_status, now, task_id))
         connection.commit()
 
-    if cursor.rowcount == 0:
+    return cursor.rowcount
+
+
+def update_task_status(task_id, task_status):
+    if task_status not in VALID_TASK_STATUSES:
+        raise ValueError(f"Invalid task status: {task_status}")
+
+    existing_task = get_task_by_id(task_id)
+
+    if existing_task is None:
+        return None
+
+    if task_status == "In Progress":
+        enforcement = get_task_enforcement_state(existing_task)
+        if enforcement["is_locked"]:
+            if existing_task.get("task_status") != "Blocked":
+                set_task_status(task_id, "Blocked")
+            create_audit_log(
+                employee_id=existing_task["employee_id"],
+                event_type="task_start_blocked",
+                event_message=(
+                    f"Task {existing_task['task_name']} could not start: "
+                    f"{'; '.join(enforcement['lock_reasons'])}."
+                ),
+                event_status="Blocked",
+            )
+            raise ValueError(
+                "Task cannot start yet: " + "; ".join(enforcement["lock_reasons"])
+            )
+
+    if set_task_status(task_id, task_status) == 0:
         return None
 
     updated_task = get_task_by_id(task_id)
@@ -127,26 +147,101 @@ def update_task_status(task_id, task_status):
         ),
     )
 
+    if task_status == "Completed":
+        refresh_downstream_task_locks(task_id)
+
     return updated_task
 
 
 def get_task_start_blockers(task):
-    blockers = []
+    return get_task_enforcement_state(task)["lock_reasons"]
 
+
+def get_task_enforcement_state(task):
+    if isinstance(task, str):
+        task = get_task_by_id(task)
+
+    if task is None:
+        return None
+
+    lock_reasons = []
     approval = get_approval_by_task_id(task["task_id"])
-    if approval and approval.get("approval_status") != "Approved":
-        blockers.append(
+    approval_status = approval.get("approval_status") if approval else None
+
+    if task.get("approval_required") and approval is None:
+        lock_reasons.append("approval record is missing")
+    elif approval and approval.get("approval_status") != "Approved":
+        lock_reasons.append(
             f"approval is {approval.get('approval_status', 'not approved')}"
         )
 
-    for dependency in get_dependencies_for_task(task["task_id"]):
+    dependencies = get_dependencies_for_task(task["task_id"])
+    blocked_dependencies = []
+    for dependency in dependencies:
         if dependency.get("depends_on_task_status") != "Completed":
-            blockers.append(
+            blocked_dependencies.append(dependency)
+            lock_reasons.append(
                 f"{dependency.get('depends_on_task_name')} is "
                 f"{dependency.get('depends_on_task_status')}"
             )
 
-    return blockers
+    return {
+        "task_id": task["task_id"],
+        "task_status": task.get("task_status"),
+        "is_locked": bool(lock_reasons),
+        "can_start": not lock_reasons,
+        "lock_reasons": lock_reasons,
+        "approval_status": approval_status,
+        "dependency_count": len(dependencies),
+        "blocked_dependency_count": len(blocked_dependencies),
+        "dependencies": dependencies,
+    }
+
+
+def refresh_task_lock_state(task_id, trigger="dependency_updated"):
+    task = get_task_by_id(task_id)
+    if task is None:
+        return None
+
+    enforcement = get_task_enforcement_state(task)
+
+    if task.get("task_status") == "Blocked" and not enforcement["is_locked"]:
+        set_task_status(task_id, "Pending")
+        create_audit_log(
+            employee_id=task["employee_id"],
+            event_type="task_unlocked",
+            event_message=(
+                f"Task {task['task_name']} was unlocked after {trigger}."
+            ),
+        )
+        return get_task_by_id(task_id)
+
+    if enforcement["is_locked"]:
+        create_audit_log(
+            employee_id=task["employee_id"],
+            event_type="task_still_locked",
+            event_message=(
+                f"Task {task['task_name']} remains locked: "
+                f"{'; '.join(enforcement['lock_reasons'])}."
+            ),
+            event_status="Blocked",
+        )
+
+    return task
+
+
+def refresh_downstream_task_locks(completed_task_id):
+    refreshed_tasks = []
+
+    for downstream in get_downstream_tasks(completed_task_id):
+        refreshed = refresh_task_lock_state(
+            downstream["task_id"],
+            trigger="upstream task completion",
+        )
+        if refreshed:
+            refreshed_tasks.append(refreshed)
+
+    return refreshed_tasks
 
 
 def get_task_dependencies(task_id):
