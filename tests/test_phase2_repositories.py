@@ -139,6 +139,24 @@ def test_update_approval_decision(memory_connection):
     assert updated["reviewed_by"] == "Avery"
 
 
+def test_approval_lookup_normalizes_ids(memory_connection):
+    approval = approval_repository.create_approval(
+        employee_id="EMP_1",
+        related_task_id="task_1",
+        action_type="Review task",
+    )
+
+    fetched = approval_repository.get_approval_by_task_id(" task_1 ")
+    updated = approval_repository.update_approval_decision(
+        approval["approval_id"].lower(),
+        approval_status="Approved",
+    )
+
+    assert fetched["approval_id"] == approval["approval_id"]
+    assert fetched["related_task_id"] == "TASK_1"
+    assert updated["approval_status"] == "Approved"
+
+
 def test_update_approval_decision_rejects_invalid_status(memory_connection):
     approval = approval_repository.create_approval(
         employee_id="EMP_1",
@@ -168,6 +186,25 @@ def test_update_task_status(memory_connection):
 
     updated = task_repository.update_task_status(task["task_id"], "Completed")
 
+    assert updated["task_status"] == "Completed"
+
+
+def test_task_lookup_and_status_update_normalize_task_id(memory_connection):
+    task = task_repository.create_task(
+        "EMP_1",
+        {
+            "task_name": "Send welcome email",
+            "task_description": "Send a welcome email.",
+        },
+    )
+
+    fetched = task_repository.get_task_by_id(f" {task['task_id'].lower()} ")
+    updated = task_repository.update_task_status(
+        task["task_id"].lower(),
+        "Completed",
+    )
+
+    assert fetched["task_id"] == task["task_id"]
     assert updated["task_status"] == "Completed"
 
 

@@ -13,6 +13,14 @@ VALID_APPROVAL_STATUSES = {
 }
 
 
+def normalize_approval_id(approval_id):
+    return approval_id.strip().upper()
+
+
+def normalize_task_id(task_id):
+    return task_id.strip().upper()
+
+
 def create_approval(employee_id, related_task_id, action_type):
     approval_id = f"APPROVAL_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
@@ -32,7 +40,7 @@ def create_approval(employee_id, related_task_id, action_type):
     values = (
         approval_id,
         employee_id.upper(),
-        related_task_id,
+        normalize_task_id(related_task_id) if related_task_id else None,
         action_type,
         PENDING_APPROVAL,
         now,
@@ -69,6 +77,7 @@ def create_task_approvals(employee_id, tasks):
 
 
 def get_approval_by_task_id(task_id):
+    task_id = normalize_task_id(task_id)
     query = "SELECT * FROM approvals WHERE related_task_id = ?"
 
     with get_connection() as connection:
@@ -81,6 +90,7 @@ def get_approval_by_task_id(task_id):
 
 
 def get_approval_by_id(approval_id):
+    approval_id = normalize_approval_id(approval_id)
     query = "SELECT * FROM approvals WHERE approval_id = ?"
 
     with get_connection() as connection:
@@ -124,6 +134,7 @@ def update_approval_decision(
     review_notes="",
     reviewed_by="HR",
 ):
+    approval_id = normalize_approval_id(approval_id)
     if approval_status not in VALID_APPROVAL_STATUSES:
         raise ValueError(f"Invalid approval status: {approval_status}")
 

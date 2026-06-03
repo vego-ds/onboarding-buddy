@@ -35,7 +35,7 @@ def get_dependencies(task_id: str):
     enforcement = get_task_enforcement_state(task)
 
     return {
-        "task_id": task_id,
+        "task_id": task["task_id"],
         "dependency_count": len(dependencies),
         "dependencies": dependencies,
         "enforcement": enforcement,

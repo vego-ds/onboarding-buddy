@@ -25,7 +25,7 @@ def root():
     return {
         "app": "Onboarding Buddy",
         "status": "running",
-        "phase": "Phase 1 - Engineering Foundation",
+        "phase": "Phase 2 - Workflow Operations MVP",
     }
 
 

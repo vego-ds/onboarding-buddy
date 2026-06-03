@@ -12,6 +12,10 @@ from database.db import get_connection
 VALID_TASK_STATUSES = {"Pending", "In Progress", "Completed", "Blocked", "Failed"}
 
 
+def normalize_task_id(task_id):
+    return task_id.strip().upper()
+
+
 def create_task(employee_id, task):
     task_id = f"TASK_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
@@ -81,6 +85,7 @@ def get_tasks_by_employee_id(employee_id):
 
 
 def get_task_by_id(task_id):
+    task_id = normalize_task_id(task_id)
     query = "SELECT * FROM onboarding_tasks WHERE task_id = ?"
 
     with get_connection() as connection:
@@ -93,6 +98,7 @@ def get_task_by_id(task_id):
 
 
 def set_task_status(task_id, task_status):
+    task_id = normalize_task_id(task_id)
     now = datetime.now(UTC).isoformat()
     query = """
     UPDATE onboarding_tasks
@@ -108,6 +114,7 @@ def set_task_status(task_id, task_status):
 
 
 def update_task_status(task_id, task_status):
+    task_id = normalize_task_id(task_id)
     if task_status not in VALID_TASK_STATUSES:
         raise ValueError(f"Invalid task status: {task_status}")
 
@@ -199,6 +206,7 @@ def get_task_enforcement_state(task):
 
 
 def refresh_task_lock_state(task_id, trigger="dependency_updated"):
+    task_id = normalize_task_id(task_id)
     task = get_task_by_id(task_id)
     if task is None:
         return None
@@ -231,6 +239,7 @@ def refresh_task_lock_state(task_id, trigger="dependency_updated"):
 
 
 def refresh_downstream_task_locks(completed_task_id):
+    completed_task_id = normalize_task_id(completed_task_id)
     refreshed_tasks = []
 
     for downstream in get_downstream_tasks(completed_task_id):
@@ -245,4 +254,4 @@ def refresh_downstream_task_locks(completed_task_id):
 
 
 def get_task_dependencies(task_id):
-    return get_dependencies_for_task(task_id)
+    return get_dependencies_for_task(normalize_task_id(task_id))

@@ -4,7 +4,13 @@ from uuid import uuid4
 from database.db import get_connection
 
 
+def normalize_task_id(task_id):
+    return task_id.strip().upper()
+
+
 def create_task_dependency(employee_id, task_id, depends_on_task_id):
+    task_id = normalize_task_id(task_id)
+    depends_on_task_id = normalize_task_id(depends_on_task_id)
     existing = get_dependency(task_id, depends_on_task_id)
     if existing:
         return existing
@@ -57,6 +63,8 @@ def create_linear_task_dependencies(employee_id, tasks):
 
 
 def get_dependency(task_id, depends_on_task_id):
+    task_id = normalize_task_id(task_id)
+    depends_on_task_id = normalize_task_id(depends_on_task_id)
     query = """
     SELECT *
     FROM task_dependencies
@@ -85,6 +93,7 @@ def get_dependency_by_id(dependency_id):
 
 
 def get_dependencies_for_task(task_id):
+    task_id = normalize_task_id(task_id)
     query = """
     SELECT
         dependency.dependency_id,
@@ -108,6 +117,7 @@ def get_dependencies_for_task(task_id):
 
 
 def get_downstream_tasks(task_id):
+    task_id = normalize_task_id(task_id)
     query = """
     SELECT
         dependency.dependency_id,

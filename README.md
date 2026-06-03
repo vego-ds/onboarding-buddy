@@ -1,26 +1,46 @@
 # Onboarding Buddy
 
-Onboarding Buddy is an AI workflow product for employee onboarding. It combines a Streamlit dashboard, FastAPI backend, PostgreSQL-ready persistence, and a LangGraph supervisor workflow to create employee records, generate onboarding task plans, review HR approvals, and update task status from a usable HR operations interface.
+Onboarding Buddy is an AI-assisted employee onboarding workflow platform. It combines a Streamlit operations workspace, FastAPI backend, LangGraph supervisor workflow, OpenRouter LLM integration, and relational persistence to create employee records, generate onboarding plans, manage approvals, enforce task dependencies, and inspect workflow execution history.
 
-The project is intentionally scoped as a controlled onboarding workflow, not an unrestricted autonomous agent.
+The project is intentionally scoped as a controlled workflow orchestration prototype, not an unrestricted autonomous agent.
 
-## Current Scope
+## Implemented Now
 
-- Create employee onboarding records
-- List recent employees in a dashboard
-- Generate onboarding plans through a supervisor-controlled LangGraph flow
-- Validate employee profile data with an Intake Agent
-- Generate structured onboarding tasks with a Task Planning Agent
-- Fall back to deterministic default tasks when LLM generation fails
-- View generated tasks, owners, priorities, approval flags, and task metrics
-- Create approval records for approval-required tasks
-- Review approval requests and record HR decisions
-- Update onboarding task status
-- Enforce task dependencies before downstream work can start
-- Persist audit events for approvals, task changes, employee edits, and workflow requests
-- View employee workflow history from the operations workspace
-- Persist workflow runs and agent execution summaries for observability
-- Track employee onboarding lifecycle status such as `PENDING`, `PLAN_READY`, and `FAILED`
+- Supervisor Agent
+- Intake Agent
+- Task Planning Agent
+- LangGraph workflow
+- OpenRouter LLM integration with deterministic fallback tasks
+- FastAPI backend
+- Streamlit frontend
+- SQLite fallback
+- PostgreSQL support through `DATABASE_URL`
+- Render PostgreSQL deployment support
+- Employee create, list, detail, and edit
+- Onboarding plan generation
+- Task lifecycle management
+- Approval operations
+- Workflow run persistence
+- Agent run history
+- Workflow observability APIs
+- Task dependency enforcement
+- Locked/unlocked task state
+- Approval unlock logic
+- Timeline events
+- Frontend Operations workspace
+- Tests covering Phase 2 behavior
+
+## Roadmap Only
+
+- Policy/Knowledge Agent
+- RAG/vector memory
+- Email or Slack notifications
+- Authentication and authorization
+- Advanced audit dashboard
+- Alembic migrations
+- Background workers
+- Multi-user roles
+- Production observability stack
 
 ## Tech Stack
 
@@ -28,7 +48,7 @@ The project is intentionally scoped as a controlled onboarding workflow, not an 
 - Backend: FastAPI
 - Workflow orchestration: LangGraph
 - LLM provider: OpenRouter
-- Database: PostgreSQL for Phase 2 infrastructure, with SQLite as a local fallback
+- Database: PostgreSQL for Phase 2 infrastructure, SQLite for local fallback
 - Validation: Pydantic
 - Tests: pytest
 
@@ -43,6 +63,8 @@ Streamlit Frontend
   v
 FastAPI Backend
   |
+  +--> Employee / Task / Approval / Workflow APIs
+  |
   v
 LangGraph Workflow
   |
@@ -54,56 +76,33 @@ Supervisor Agent
   +--> Task Planning Agent
   |
   v
-PostgreSQL / SQLite Database
+PostgreSQL or SQLite
 ```
 
-The Supervisor Agent owns routing decisions. Specialist agents only perform focused tasks and communicate through structured workflow state.
-
-## Workflow
-
-```text
-Create Employee
-  |
-  v
-Supervisor routes to Intake Agent
-  |
-  v
-Intake validates employee profile
-  |
-  v
-Supervisor routes to Task Planning Agent
-  |
-  v
-Task Planning Agent generates or falls back to 6 onboarding tasks
-  |
-  v
-Tasks are saved to the configured relational database
-  |
-  v
-Employee status updates to PLAN_READY
-```
+The frontend never calls agents directly. It calls FastAPI endpoints, and the backend controls workflow execution, persistence, and operational state.
 
 ## Implemented API Endpoints
 
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Backend health check |
+| `GET` | `/employees` | List employee records |
 | `POST` | `/employees` | Create employee onboarding record |
-| `GET` | `/employees` | List recent employee records |
 | `GET` | `/employees/{employee_id}` | Get one employee |
 | `PUT` | `/employees/{employee_id}` | Edit employee onboarding details |
+| `GET` | `/employees/{employee_id}/tasks` | Get employee tasks and summary metrics |
+| `GET` | `/employees/{employee_id}/timeline` | Get employee workflow timeline |
 | `POST` | `/employees/{employee_id}/generate-onboarding-plan` | Run onboarding workflow |
-| `GET` | `/employees/{employee_id}/tasks` | Get generated onboarding tasks |
+| `GET` | `/tasks/{task_id}` | Get task detail and enforcement state |
+| `GET` | `/tasks/{task_id}/dependencies` | Get upstream dependencies and locked/unlocked state |
+| `PATCH` | `/tasks/{task_id}/status` | Update task lifecycle status |
 | `GET` | `/approvals` | List approval requests |
-| `PATCH` | `/approvals/{approval_id}` | Record an approval decision |
-| `GET` | `/tasks/{task_id}` | Get one onboarding task |
-| `GET` | `/tasks/{task_id}/dependencies` | Get upstream task dependencies |
-| `PATCH` | `/tasks/{task_id}/status` | Update task status |
-| `GET` | `/employees/{employee_id}/timeline` | Get employee workflow history |
+| `GET` | `/approvals/{approval_id}` | Get one approval |
+| `PATCH` | `/approvals/{approval_id}` | Record approval decision |
 | `GET` | `/workflow-runs` | List workflow executions |
 | `GET` | `/workflow-runs/{workflow_run_id}` | Get workflow and agent execution details |
 
-## Setup
+## Local Setup
 
 ```bash
 python3 -m venv venv
@@ -111,28 +110,29 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Create `.env`:
+## Local SQLite
 
-```text
-OPENROUTER_API_KEY=your_openrouter_api_key
-OPENROUTER_MODEL=meta-llama/llama-3.1-8b-instruct
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-DATABASE_URL=postgresql://onboarding_buddy:onboarding_buddy@localhost:5432/onboarding_buddy
-```
-
-Start PostgreSQL for local Phase 2 development:
+Use SQLite for lightweight local demos:
 
 ```bash
-docker compose up -d postgres
-```
-
-Initialize the database schema:
-
-```bash
+export DATABASE_URL=sqlite:///onboarding_buddy.db
 python -m database.db
 ```
 
-For lightweight local demos, set `DATABASE_URL=sqlite:///onboarding_buddy.db` before initializing the database.
+## Local PostgreSQL
+
+Start PostgreSQL:
+
+```bash
+docker compose up -d
+```
+
+Set the database URL:
+
+```bash
+export DATABASE_URL=postgresql://onboarding_buddy:onboarding_buddy@localhost:5432/onboarding_buddy
+python -m database.db
+```
 
 ## Run Locally
 
@@ -154,45 +154,49 @@ Open:
 http://127.0.0.1:8501
 ```
 
+## Render Backend Deployment
+
+Use a Render PostgreSQL database and set the backend environment variables:
+
+```text
+DATABASE_URL=<Render Internal Database URL>
+OPENROUTER_API_KEY=<secret>
+OPENROUTER_MODEL=openrouter/free
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+LANGSMITH_TRACING=false
+APP_ENV=production
+```
+
+Render backend Start Command:
+
+```bash
+python -m database.db && uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+```
+
+## Streamlit Cloud Deployment
+
+Set this Streamlit secret:
+
+```toml
+API_BASE_URL = "https://onboarding-buddy-api.onrender.com"
+```
+
+For local development, the frontend falls back to:
+
+```text
+http://127.0.0.1:8000
+```
+
 ## Test
 
 ```bash
-python -m compileall frontend backend database agents schemas tests
-python -m pytest
+./venv/bin/python -m compileall frontend backend database agents schemas tests
+./venv/bin/python -m pytest
 ```
 
-## Demo Flow
+## Migration Note
 
-1. Start FastAPI and Streamlit.
-2. Create a new employee record.
-3. Confirm the employee appears in the dashboard and directory.
-4. Generate the onboarding plan.
-5. Review the task metrics and generated task cards.
-6. Open workflow details to show supervisor routing and agent outputs.
-7. Fetch tasks again from the Tasks tab to show persistence.
-
-## Portfolio Highlights
-
-- Product-style frontend rather than a raw API demo
-- Supervisor-based multi-agent workflow with LangGraph
-- Deterministic fallback behavior for reliability
-- Structured task validation before database persistence
-- Duplicate task prevention
-- Clear API separation between frontend, backend, workflow, and database layers
-- PostgreSQL-ready persistence boundary with SQLite fallback for local demos
-- Approval workflow and task status operations for Phase 2
-- Dependency enforcement and audit timeline for workflow realism
-- Workflow-run persistence for execution observability
-
-## Roadmap
-
-These are intentionally deferred beyond Phase 1:
-
-- Policy and Knowledge Agent
-- Welcome email draft review
-- Calendar and manager follow-up agents
-- Authentication and role-based access
-- Deployment to a hosted environment
+The current implementation uses a small database adapter and a repeatable `schema.sql` file. Alembic is not implemented yet. If schema changes become frequent across deployed environments, add Alembic or dedicated migration scripts before making destructive table changes.
 
 ## Repository Structure
 
@@ -203,8 +207,8 @@ database/             relational schema, connection adapter, and repositories
 docs/                 Architecture, API, workflow, and portfolio documentation
 frontend/             Streamlit dashboard
 llm/                  OpenRouter client
-schemas/              Pydantic request/response models
+schemas/              Pydantic request models
 scripts/              Local workflow utilities
-tests/                Agent and workflow safety tests
+tests/                Agent, repository, route, and database tests
 docker-compose.yml    Local PostgreSQL service for Phase 2 development
 ```

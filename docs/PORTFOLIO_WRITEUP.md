@@ -2,47 +2,60 @@
 
 ## Project Summary
 
-Onboarding Buddy is an AI-assisted employee onboarding workflow tool. It helps HR teams create employee onboarding records, generate structured onboarding plans, and review task ownership and approval requirements through a usable dashboard.
-
-The project demonstrates how multi-agent orchestration can be applied to a practical business workflow while preserving reliability, validation, and human oversight.
+Onboarding Buddy is an AI-assisted workflow operations platform for employee onboarding. It helps HR teams create employee records, generate structured onboarding plans, manage approvals, enforce task dependencies, and inspect workflow execution history through a usable operations dashboard.
 
 ## Problem
 
-Employee onboarding often depends on repeated manual coordination across HR, IT, managers, and new hires. Missing steps can create delays, inconsistent onboarding experiences, and poor visibility into task ownership.
+Employee onboarding requires coordination across HR, IT, managers, and new hires. Manual tracking creates missed steps, delayed access, unclear ownership, and poor visibility into workflow state.
 
 ## Solution
 
-Onboarding Buddy uses a supervisor-based LangGraph workflow to coordinate specialized agents:
+Onboarding Buddy uses a supervisor-based LangGraph workflow with focused agents:
 
 - Supervisor Agent routes the workflow.
 - Intake Agent validates employee data.
 - Task Planning Agent generates structured onboarding tasks.
 
-The Streamlit frontend gives HR a simple operational dashboard for creating employees, generating plans, and reviewing tasks.
+The FastAPI backend persists workflow runs, agent runs, tasks, approvals, dependencies, and timeline events. The Streamlit frontend gives HR an operations workspace for reviewing approvals, changing task status, and seeing locked/unlocked workflow state.
 
 ## Technical Highlights
 
-- FastAPI backend with clear endpoint boundaries
-- Streamlit frontend with dashboard metrics and task review
+- FastAPI backend with clear route boundaries
+- Streamlit frontend with Operations workspace
 - LangGraph orchestration with deterministic routing safeguards
 - OpenRouter integration for configurable LLM task generation
-- SQLite persistence for employees and onboarding tasks
-- Structured validation of LLM-generated task plans
-- Fallback task generation when LLM output is unavailable or invalid
-- pytest coverage for agent parsing and validation behavior
+- PostgreSQL support with SQLite fallback
+- Render PostgreSQL deployment support
+- Workflow run persistence
+- Agent run history
+- Approval operations
+- Task dependency enforcement
+- Locked/unlocked task state
+- Timeline events for auditability
+- pytest coverage for agents, repositories, route behavior, and database configuration
 
 ## Scope Discipline
 
-The project first stabilized Phase 1 around:
+Implemented now:
 
-- Create employee
-- Generate onboarding plan
-- View employee directory
-- View generated tasks
-- Show workflow and task status
+- employee CRUD/listing
+- onboarding plan generation
+- task lifecycle management
+- approvals
+- workflow observability
+- dependency enforcement
+- operations dashboard
 
-Phase 2 begins with approval operations, task status updates, dependency enforcement, audit timeline visibility, and persisted workflow-run observability. Policy retrieval, email drafts, and follow-up agents remain roadmap items rather than mixed into the first Phase 2 slices.
+Roadmap only:
+
+- Policy/Knowledge Agent
+- RAG/vector memory
+- email or Slack notifications
+- authentication and authorization
+- Alembic migrations
+- background workers
+- production observability stack
 
 ## Outcome
 
-The final result is a portfolio-ready AI workflow product that shows backend architecture, agent orchestration, frontend UX, persistence, validation, and practical product judgment.
+The project has moved from an AI planning demo into a credible workflow orchestration MVP. Phase 2 is suitable to mark complete for MVP scope after deployment verification against a live PostgreSQL database.

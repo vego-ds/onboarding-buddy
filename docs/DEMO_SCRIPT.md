@@ -2,7 +2,7 @@
 
 ## Goal
 
-Show that Onboarding Buddy is a usable Phase 1 AI workflow product, not just an agent experiment.
+Show Onboarding Buddy as a Phase 2 AI workflow operations MVP, not just a task-generation demo.
 
 ## Setup
 
@@ -15,43 +15,40 @@ streamlit run frontend/app.py
 ## Recording Flow
 
 1. Open the Streamlit app.
-2. Show the dashboard metrics and API status indicator.
-3. Create a new employee:
-   - Name: `Sarah Chen`
-   - Email: `sarah.chen@company.com`
-   - Role: `Data Engineer`
-   - Department: `Platform Engineering`
-   - Joining date: choose a future date
-4. Show the generated employee ID and recent employee card.
-5. Go to Generate Plan.
-6. Select the employee from the dropdown.
-7. Generate the onboarding plan.
-8. Show the task metrics:
-   - total tasks
-   - high priority tasks
-   - approval-required tasks
-   - owners
-9. Expand workflow details and briefly point out supervisor routing and agent output.
-10. Go to Operations.
-11. Show the approval queue for approval-required tasks.
-12. Show the task status controls for the same employee.
-13. Point out dependency labels under each task.
-14. Show the workflow timeline.
-15. Show the recent workflow run and agent execution summaries.
-16. Go to Tasks.
-17. Fetch tasks for the same employee to show persistence.
-18. End on the Directory tab to show the product-style dashboard view.
+2. Show dashboard metrics and API status.
+3. Create a new employee.
+4. Confirm the employee appears in Recent Employees and Directory.
+5. Generate an onboarding plan for that employee.
+6. Show the returned `workflow_run_id`.
+7. Review generated tasks, owners, priorities, and approval flags.
+8. Open Operations.
+9. Show the approval queue.
+10. Show locked/unlocked task indicators.
+11. Try to start a locked downstream task and show the backend enforcement message.
+12. Approve the relevant approval.
+13. Complete the upstream task.
+14. Show the downstream task unlocking.
+15. Show the employee workflow timeline.
+16. Show Recent Workflow Runs and agent execution summaries.
+17. End on the Directory tab.
 
 ## Talking Points
 
-- The frontend never calls agents directly; it calls the FastAPI backend.
-- The backend triggers a LangGraph workflow.
-- The Supervisor Agent controls routing.
-- Intake validates employee data before task planning.
-- Task Planning generates structured tasks and validates them before persistence.
-- The system falls back to deterministic tasks if LLM generation fails.
-- Phase 2 starts with approval operations and task status updates.
-- Dependency enforcement prevents downstream work from starting too early.
-- Audit events make the workflow explainable.
-- Workflow-run records make execution observable.
-- Policy retrieval, email drafts, and manager follow-up automation remain future roadmap items.
+- FastAPI controls workflow execution; the frontend does not call agents directly.
+- LangGraph routes through Supervisor, Intake, and Task Planning.
+- OpenRouter is used for LLM generation, with deterministic fallback tasks for reliability.
+- Workflow runs and agent runs are persisted for observability.
+- Approval decisions and dependency completion affect task lock state.
+- Timeline events make workflow behavior auditable.
+- PostgreSQL is supported for Phase 2 deployment, with SQLite available for local fallback.
+
+## Roadmap Callout
+
+The demo should not claim these are implemented:
+
+- Policy/Knowledge Agent
+- RAG/vector memory
+- real email or Slack notifications
+- authentication and authorization
+- background workers
+- Alembic migrations

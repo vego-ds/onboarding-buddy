@@ -9,7 +9,7 @@ The app still supports SQLite for lightweight local demos and tests, but Postgre
 ## Start PostgreSQL Locally
 
 ```bash
-docker compose up -d postgres
+docker compose up -d
 ```
 
 The local container creates:
@@ -63,8 +63,37 @@ GET /employees/{employee_id}/tasks
 GET /employees/{employee_id}/timeline
 ```
 
+## Render Backend Deployment
+
+Use a Render PostgreSQL database and set `DATABASE_URL` to the Render Internal Database URL.
+
+Render backend Start Command:
+
+```bash
+python -m database.db && uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+```
+
+Render environment variables:
+
+```text
+DATABASE_URL=<Render Internal Database URL>
+OPENROUTER_API_KEY=<secret>
+OPENROUTER_MODEL=openrouter/free
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+LANGSMITH_TRACING=false
+APP_ENV=production
+```
+
+## Streamlit Cloud
+
+Set this secret:
+
+```toml
+API_BASE_URL = "https://onboarding-buddy-api.onrender.com"
+```
+
 ## Notes
 
 The current implementation uses a small database adapter rather than SQLAlchemy/Alembic. That keeps the migration scoped while preserving the existing repository boundary.
 
-Alembic should be introduced before the schema starts changing frequently across deployed environments.
+Alembic is not implemented yet. The current `schema.sql` is safe to run repeatedly for creating missing tables and indexes, but it does not migrate existing table definitions. Alembic or dedicated migration scripts should be introduced before making repeated deployed schema changes.
