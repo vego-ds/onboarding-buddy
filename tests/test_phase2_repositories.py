@@ -290,6 +290,32 @@ def test_workflow_run_and_agent_runs_are_persisted(memory_connection):
     assert agent_runs[0]["execution_order"] == 1
 
 
+def test_workflow_run_can_be_fetched_by_workflow_run_id(memory_connection):
+    workflow_run = workflow_run_repository.create_workflow_run("EMP_1")
+
+    fetched = workflow_run_repository.get_workflow_run_by_id(
+        workflow_run["workflow_run_id"]
+    )
+
+    assert fetched["workflow_run_id"] == workflow_run["workflow_run_id"]
+    assert fetched["employee_id"] == "EMP_1"
+    assert fetched["workflow_status"] == "Running"
+
+
+def test_workflow_run_lookup_normalizes_lowercase_id(memory_connection):
+    workflow_run = workflow_run_repository.create_workflow_run("EMP_1")
+
+    fetched = workflow_run_repository.get_workflow_run_by_id(
+        workflow_run["workflow_run_id"].lower()
+    )
+
+    assert fetched["workflow_run_id"] == workflow_run["workflow_run_id"]
+
+
+def test_workflow_run_lookup_returns_none_for_missing_run(memory_connection):
+    assert workflow_run_repository.get_workflow_run_by_id("WF_MISSING") is None
+
+
 def test_workflow_run_listing_filters_by_employee(memory_connection):
     workflow_run_repository.create_workflow_run("EMP_1")
     workflow_run_repository.create_workflow_run("EMP_2")
@@ -298,3 +324,25 @@ def test_workflow_run_listing_filters_by_employee(memory_connection):
 
     assert len(runs) == 1
     assert runs[0]["employee_id"] == "EMP_1"
+
+
+def test_agent_runs_are_fetched_for_normalized_workflow_run_id(memory_connection):
+    workflow_run = workflow_run_repository.create_workflow_run("EMP_1")
+    workflow_run_repository.create_agent_runs(
+        workflow_run_id=workflow_run["workflow_run_id"],
+        employee_id="EMP_1",
+        agent_execution_history=[
+            {
+                "agent": "intake_agent",
+                "status": "success",
+                "summary": "Validated employee.",
+            }
+        ],
+    )
+
+    agent_runs = workflow_run_repository.get_agent_runs(
+        workflow_run_id=workflow_run["workflow_run_id"].lower()
+    )
+
+    assert len(agent_runs) == 1
+    assert agent_runs[0]["workflow_run_id"] == workflow_run["workflow_run_id"]

@@ -4,6 +4,10 @@ from uuid import uuid4
 from database.db import get_connection
 
 
+def normalize_workflow_run_id(workflow_run_id):
+    return workflow_run_id.strip().upper()
+
+
 def create_workflow_run(employee_id):
     workflow_run_id = f"WF_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
@@ -34,6 +38,7 @@ def create_workflow_run(employee_id):
 
 
 def complete_workflow_run(workflow_run_id, final_state):
+    workflow_run_id = normalize_workflow_run_id(workflow_run_id)
     now = datetime.now(UTC).isoformat()
     query = """
     UPDATE workflow_runs
@@ -64,6 +69,7 @@ def complete_workflow_run(workflow_run_id, final_state):
 
 
 def create_agent_runs(workflow_run_id, employee_id, agent_execution_history):
+    workflow_run_id = normalize_workflow_run_id(workflow_run_id)
     saved_runs = []
 
     for index, execution in enumerate(agent_execution_history, start=1):
@@ -91,6 +97,7 @@ def create_agent_run(
     output_summary,
     execution_status,
 ):
+    workflow_run_id = normalize_workflow_run_id(workflow_run_id)
     agent_run_id = f"AGENT_RUN_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
 
@@ -131,7 +138,12 @@ def create_agent_run(
 
 
 def get_workflow_run_by_id(workflow_run_id):
-    query = "SELECT * FROM workflow_runs WHERE workflow_run_id = ?"
+    workflow_run_id = normalize_workflow_run_id(workflow_run_id)
+    query = """
+    SELECT *
+    FROM workflow_runs
+    WHERE workflow_run_id = ?
+    """
 
     with get_connection() as connection:
         row = connection.execute(query, (workflow_run_id,)).fetchone()
@@ -185,7 +197,7 @@ def get_agent_runs(workflow_run_id=None, employee_id=None):
 
     if workflow_run_id:
         filters.append("workflow_run_id = ?")
-        values.append(workflow_run_id)
+        values.append(normalize_workflow_run_id(workflow_run_id))
 
     if employee_id:
         filters.append("employee_id = ?")
