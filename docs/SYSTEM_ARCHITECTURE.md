@@ -75,12 +75,15 @@ PostgreSQL through DATABASE_URL
 
 1. A user asks a question from the Streamlit Assistant tab.
 2. The frontend calls `POST /assistant/chat`.
-3. The backend normalizes the stakeholder role.
-4. The assistant retrieves approved knowledge chunks using deterministic local embeddings and cosine scoring.
-5. If an employee ID is provided, existing employee, task, approval, and workflow run context is included.
-6. Confidence score, citation metadata, and escalation state are calculated.
-7. OpenRouter synthesizes a concise answer when confidence is sufficient.
-8. If the LLM is unavailable or confidence is low, the assistant returns a deterministic source-grounded fallback or escalation answer.
+3. The backend runs the input through a fast safety classifier before retrieval or LLM synthesis.
+4. The backend normalizes the stakeholder role.
+5. The assistant retrieves approved knowledge chunks using deterministic local embeddings and cosine scoring.
+6. If an employee ID is provided, existing employee, task, approval, and workflow run context is included through fixed repository calls.
+7. Retrieved knowledge and workflow context are wrapped in untrusted XML before the LLM sees them.
+8. Confidence score, citation metadata, and escalation state are calculated.
+9. OpenRouter synthesizes a concise answer when confidence is sufficient.
+10. If the LLM is unavailable or confidence is low, the assistant returns a deterministic source-grounded fallback or escalation answer.
+11. The final answer is inspected for PII and hidden prompt exfiltration before it is returned.
 
 The assistant is not part of the LangGraph workflow graph yet. It is a separate self-service API layer over approved knowledge and existing workflow records.
 
@@ -112,6 +115,7 @@ PostgreSQL is the runtime database. Repository tests may use in-memory test doub
 - Workflow run IDs, task IDs, approval IDs, and employee IDs are normalized at repository boundaries where needed.
 - Assistant roles are normalized to Employee, Manager, HR, IT, or Security; unknown roles fall back to Employee.
 - Assistant answers include citations, confidence labels, and escalation guidance when approved sources are weak.
+- Assistant input, context, tools, and output are protected by layered guardrails documented in `docs/SECURITY_MODEL.md`.
 
 ## Deployment
 

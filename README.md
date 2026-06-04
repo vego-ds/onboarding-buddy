@@ -35,6 +35,10 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - Approved knowledge chunking and deterministic hashed embeddings
 - PostgreSQL-backed `knowledge_chunks` vector index
 - Assistant knowledge reindex endpoint
+- Defense-in-depth assistant guardrails
+- Input safety classification before retrieval or LLM synthesis
+- XML isolation for untrusted RAG/tool context
+- Final response inspection for PII and prompt exfiltration
 - Tests covering Phase 2 behavior and Phase 3 assistant/RAG behavior
 
 ## Roadmap Only
