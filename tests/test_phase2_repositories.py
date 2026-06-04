@@ -16,6 +16,7 @@ def memory_connection(monkeypatch):
         """
         CREATE TABLE onboarding_tasks (
             task_id TEXT PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
             employee_id TEXT NOT NULL,
             task_name TEXT NOT NULL,
             task_description TEXT,
@@ -30,6 +31,7 @@ def memory_connection(monkeypatch):
 
         CREATE TABLE approvals (
             approval_id TEXT PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
             employee_id TEXT NOT NULL,
             related_task_id TEXT,
             action_type TEXT NOT NULL,
@@ -42,6 +44,7 @@ def memory_connection(monkeypatch):
 
         CREATE TABLE audit_logs (
             log_id TEXT PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
             employee_id TEXT,
             workflow_run_id TEXT,
             event_type TEXT NOT NULL,
@@ -54,6 +57,7 @@ def memory_connection(monkeypatch):
 
         CREATE TABLE task_dependencies (
             dependency_id TEXT PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
             employee_id TEXT NOT NULL,
             task_id TEXT NOT NULL,
             depends_on_task_id TEXT NOT NULL,
@@ -62,6 +66,7 @@ def memory_connection(monkeypatch):
 
         CREATE TABLE workflow_runs (
             workflow_run_id TEXT PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
             employee_id TEXT NOT NULL,
             workflow_status TEXT DEFAULT 'Running',
             current_node TEXT,
@@ -77,6 +82,7 @@ def memory_connection(monkeypatch):
 
         CREATE TABLE agent_runs (
             agent_run_id TEXT PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
             workflow_run_id TEXT,
             employee_id TEXT,
             agent_name TEXT NOT NULL,
@@ -96,6 +102,7 @@ def memory_connection(monkeypatch):
 
         CREATE TABLE knowledge_chunks (
             chunk_id TEXT PRIMARY KEY,
+            tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
             source TEXT NOT NULL,
             title TEXT NOT NULL,
             content TEXT NOT NULL,
@@ -103,7 +110,7 @@ def memory_connection(monkeypatch):
             embedding_json TEXT NOT NULL,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
-            UNIQUE (source, content_hash)
+            UNIQUE (tenant_id, source, content_hash)
         );
         """
     )
@@ -114,6 +121,15 @@ def memory_connection(monkeypatch):
     monkeypatch.setattr(dependency_repository, "get_connection", lambda: connection)
     monkeypatch.setattr(workflow_run_repository, "get_connection", lambda: connection)
     monkeypatch.setattr(knowledge_repository, "get_connection", lambda: connection)
+    fake_employee = lambda employee_id: {
+        "employee_id": str(employee_id).upper(),
+        "tenant_id": "TENANT_DEFAULT",
+    }
+    monkeypatch.setattr(task_repository, "get_employee_by_id", fake_employee)
+    monkeypatch.setattr(approval_repository, "get_employee_by_id", fake_employee)
+    monkeypatch.setattr(audit_repository, "get_employee_by_id", fake_employee)
+    monkeypatch.setattr(dependency_repository, "get_employee_by_id", fake_employee)
+    monkeypatch.setattr(workflow_run_repository, "get_employee_by_id", fake_employee)
 
     yield connection
 

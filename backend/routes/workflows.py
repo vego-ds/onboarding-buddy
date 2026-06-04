@@ -25,7 +25,11 @@ def list_workflow_runs(
         else:
             raise HTTPException(status_code=403, detail="Employee filter is required.")
 
-    workflow_runs = get_workflow_runs(employee_id=employee_id, limit=limit)
+    workflow_runs = get_workflow_runs(
+        employee_id=employee_id,
+        limit=limit,
+        tenant_id=current_user.get("tenant_id", "TENANT_DEFAULT"),
+    )
 
     return {
         "workflow_run_count": len(workflow_runs),

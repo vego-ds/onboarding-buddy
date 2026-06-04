@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from database.db import get_connection
+from database.repositories.employee_repository import get_employee_by_id
 
 
 def create_audit_log(
@@ -15,10 +16,13 @@ def create_audit_log(
 ):
     log_id = f"LOG_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
+    employee = get_employee_by_id(employee_id) if employee_id else None
+    tenant_id = employee.get("tenant_id", "TENANT_DEFAULT") if employee else "TENANT_DEFAULT"
 
     query = """
     INSERT INTO audit_logs (
         log_id,
+        tenant_id,
         employee_id,
         workflow_run_id,
         event_type,
@@ -28,11 +32,12 @@ def create_audit_log(
         event_status,
         timestamp
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     values = (
         log_id,
+        tenant_id,
         employee_id.upper() if employee_id else None,
         workflow_run_id,
         event_type,

@@ -380,6 +380,21 @@ def request_api(method, path, **kwargs):
     except requests.RequestException as error:
         return None, f"Backend request failed: {error}"
 
+    if response.status_code == 401 and st.session_state.get("refresh_token"):
+        refresh_data, refresh_error = refresh_auth_token()
+        if not refresh_error and refresh_data:
+            headers = {
+                **headers,
+                "Authorization": f"Bearer {st.session_state['auth_token']}",
+            }
+            response = requests.request(
+                method,
+                f"{API_BASE_URL}{path}",
+                timeout=timeout,
+                headers=headers,
+                **kwargs,
+            )
+
     if response.ok:
         return response.json(), None
 
@@ -389,6 +404,29 @@ def request_api(method, path, **kwargs):
         detail = response.text
 
     return None, f"{response.status_code}: {detail}"
+
+
+def refresh_auth_token():
+    try:
+        response = requests.post(
+            f"{API_BASE_URL}/auth/refresh",
+            timeout=REQUEST_TIMEOUT,
+            json={"refresh_token": st.session_state.get("refresh_token", "")},
+        )
+    except requests.RequestException as error:
+        return None, f"Token refresh failed: {error}"
+
+    if not response.ok:
+        st.session_state.pop("auth_token", None)
+        st.session_state.pop("refresh_token", None)
+        st.session_state.pop("current_user", None)
+        return None, "Session expired. Please log in again."
+
+    data = response.json()
+    st.session_state["auth_token"] = data["access_token"]
+    st.session_state["refresh_token"] = data["refresh_token"]
+    st.session_state["current_user"] = data["user"]
+    return data, None
 
 
 def render_auth_gate():
@@ -418,6 +456,7 @@ def render_auth_gate():
                 render_error_state("Login failed", error)
             else:
                 st.session_state["auth_token"] = data["access_token"]
+                st.session_state["refresh_token"] = data["refresh_token"]
                 st.session_state["current_user"] = data["user"]
                 st.success("Logged in.")
                 st.rerun()
@@ -468,6 +507,7 @@ def render_auth_gate():
                 render_error_state("Registration failed", error)
             else:
                 st.session_state["auth_token"] = data["access_token"]
+                st.session_state["refresh_token"] = data["refresh_token"]
                 st.session_state["current_user"] = data["user"]
                 st.success("Account created.")
                 st.rerun()
@@ -1646,7 +1686,15 @@ with st.sidebar:
         )
         st.caption(current_user.get("email", ""))
         if st.button("Logout", use_container_width=True):
+            refresh_token = st.session_state.get("refresh_token")
+            if refresh_token:
+                request_api(
+                    "POST",
+                    "/auth/logout",
+                    json={"refresh_token": refresh_token},
+                )
             st.session_state.pop("auth_token", None)
+            st.session_state.pop("refresh_token", None)
             st.session_state.pop("current_user", None)
             st.cache_data.clear()
             st.rerun()

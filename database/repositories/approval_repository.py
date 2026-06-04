@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from database.repositories.audit_repository import create_audit_log
+from database.repositories.employee_repository import get_employee_by_id
 from database.db import get_connection
 
 PENDING_APPROVAL = "Awaiting Approval"
@@ -24,21 +25,25 @@ def normalize_task_id(task_id):
 def create_approval(employee_id, related_task_id, action_type):
     approval_id = f"APPROVAL_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
+    employee = get_employee_by_id(employee_id)
+    tenant_id = employee.get("tenant_id", "TENANT_DEFAULT") if employee else "TENANT_DEFAULT"
 
     query = """
     INSERT INTO approvals (
         approval_id,
+        tenant_id,
         employee_id,
         related_task_id,
         action_type,
         approval_status,
         created_at
     )
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     """
 
     values = (
         approval_id,
+        tenant_id,
         employee_id.upper(),
         normalize_task_id(related_task_id) if related_task_id else None,
         action_type,
@@ -102,9 +107,13 @@ def get_approval_by_id(approval_id):
     return dict(row)
 
 
-def get_approvals(employee_id=None, approval_status=None):
+def get_approvals(employee_id=None, approval_status=None, tenant_id=None):
     filters = []
     values = []
+
+    if tenant_id:
+        filters.append("tenant_id = ?")
+        values.append(tenant_id)
 
     if employee_id:
         filters.append("employee_id = ?")

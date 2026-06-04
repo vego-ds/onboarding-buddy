@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from database.db import get_connection
+from database.repositories.employee_repository import get_employee_by_id
 
 
 def normalize_workflow_run_id(workflow_run_id):
@@ -11,15 +12,18 @@ def normalize_workflow_run_id(workflow_run_id):
 def create_workflow_run(employee_id):
     workflow_run_id = f"WF_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
+    employee = get_employee_by_id(employee_id)
+    tenant_id = employee.get("tenant_id", "TENANT_DEFAULT") if employee else "TENANT_DEFAULT"
 
     query = """
     INSERT INTO workflow_runs (
         workflow_run_id,
+        tenant_id,
         employee_id,
         workflow_status,
         started_at
     )
-    VALUES (?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?)
     """
 
     with get_connection() as connection:
@@ -27,6 +31,7 @@ def create_workflow_run(employee_id):
             query,
             (
                 workflow_run_id,
+                tenant_id,
                 employee_id.upper(),
                 "Running",
                 now,
@@ -100,10 +105,13 @@ def create_agent_run(
     workflow_run_id = normalize_workflow_run_id(workflow_run_id)
     agent_run_id = f"AGENT_RUN_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
+    employee = get_employee_by_id(employee_id)
+    tenant_id = employee.get("tenant_id", "TENANT_DEFAULT") if employee else "TENANT_DEFAULT"
 
     query = """
     INSERT INTO agent_runs (
         agent_run_id,
+        tenant_id,
         workflow_run_id,
         employee_id,
         agent_name,
@@ -114,11 +122,12 @@ def create_agent_run(
         started_at,
         completed_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     values = (
         agent_run_id,
+        tenant_id,
         workflow_run_id,
         employee_id.upper(),
         agent_name,
@@ -154,24 +163,27 @@ def get_workflow_run_by_id(workflow_run_id):
     return dict(row)
 
 
-def get_workflow_runs(employee_id=None, limit=25):
+def get_workflow_runs(employee_id=None, limit=25, tenant_id=None):
+    filters = []
+    values = []
+
     if employee_id:
-        query = """
-        SELECT *
-        FROM workflow_runs
-        WHERE employee_id = ?
-        ORDER BY started_at DESC
-        LIMIT ?
-        """
-        values = (employee_id.upper(), limit)
-    else:
-        query = """
-        SELECT *
-        FROM workflow_runs
-        ORDER BY started_at DESC
-        LIMIT ?
-        """
-        values = (limit,)
+        filters.append("employee_id = ?")
+        values.append(employee_id.upper())
+
+    if tenant_id:
+        filters.append("tenant_id = ?")
+        values.append(tenant_id)
+
+    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+    query = f"""
+    SELECT *
+    FROM workflow_runs
+    {where_clause}
+    ORDER BY started_at DESC
+    LIMIT ?
+    """
+    values.append(limit)
 
     with get_connection() as connection:
         rows = connection.execute(query, values).fetchall()

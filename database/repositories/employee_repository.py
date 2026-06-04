@@ -4,13 +4,14 @@ from uuid import uuid4
 from database.db import get_connection
 
 
-def create_employee(employee_data):
+def create_employee(employee_data, tenant_id="TENANT_DEFAULT"):
     employee_id = f"EMP_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
 
     query = """
     INSERT INTO employees (
         employee_id,
+        tenant_id,
         employee_name,
         employee_email,
         role,
@@ -20,11 +21,12 @@ def create_employee(employee_data):
         created_at,
         updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     values = (
         employee_id,
+        tenant_id,
         employee_data.employee_name,
         employee_data.employee_email,
         employee_data.role,
@@ -54,10 +56,13 @@ def get_employee_by_id(employee_id):
     return dict(employee)
 
 
-def list_employees(limit=25):
+def list_employees(limit=25, tenant_id=None):
+    where_clause = "WHERE tenant_id = ?" if tenant_id else ""
+    values = (tenant_id, limit) if tenant_id else (limit,)
     query = """
     SELECT
         employee_id,
+        tenant_id,
         employee_name,
         employee_email,
         role,
@@ -67,12 +72,13 @@ def list_employees(limit=25):
         created_at,
         updated_at
     FROM employees
+    {where_clause}
     ORDER BY created_at DESC
     LIMIT ?
-    """
+    """.format(where_clause=where_clause)
 
     with get_connection() as connection:
-        rows = connection.execute(query, (limit,)).fetchall()
+        rows = connection.execute(query, values).fetchall()
 
     return [dict(row) for row in rows]
 

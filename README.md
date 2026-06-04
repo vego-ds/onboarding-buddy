@@ -42,10 +42,16 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - Phase 4 authentication foundation
 - User registration, login, and `/auth/me`
 - JWT bearer tokens
+- Refresh token rotation
+- Password reset token flow
+- SSO assertion login foundation
+- Tenant-aware users and onboarding records
+- Auth audit logs for login, refresh, reset, SSO, and registration events
 - Password hashing with PBKDF2
 - RBAC roles: `employee`, `manager`, `hr_admin`, `admin`
 - Protected employee, task, approval, workflow, assistant, and knowledge-index APIs
 - Assistant role derived from authenticated user identity
+- Alembic migration scaffold
 - Tests covering Phase 2 behavior and Phase 3 assistant/RAG behavior
 
 ## Roadmap Only
@@ -57,7 +63,7 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - Email or Slack notifications
 - Calendar, chat, and HRMS integrations
 - Advanced audit dashboard
-- Alembic migrations
+- Full enterprise SSO/OAuth provider integration
 - Background workers
 - Multi-user roles
 - Production observability stack
@@ -112,6 +118,11 @@ The frontend never calls agents directly. It calls FastAPI endpoints, and the ba
 | `GET` | `/health` | Backend health check |
 | `POST` | `/auth/register` | Create a user and return JWT |
 | `POST` | `/auth/login` | Authenticate user and return JWT |
+| `POST` | `/auth/refresh` | Rotate refresh token and return new access token |
+| `POST` | `/auth/logout` | Revoke refresh token |
+| `POST` | `/auth/password-reset/request` | Create password reset token |
+| `POST` | `/auth/password-reset/confirm` | Complete password reset |
+| `POST` | `/auth/sso/login` | SSO assertion login foundation |
 | `GET` | `/auth/me` | Return authenticated user |
 | `GET` | `/employees` | List employee records |
 | `POST` | `/employees` | Create employee onboarding record |
@@ -185,6 +196,10 @@ OPENROUTER_MODEL=openrouter/free
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 LANGSMITH_TRACING=false
 APP_ENV=production
+JWT_SECRET=<long random secret>
+REFRESH_TOKEN_EXPIRE_DAYS=30
+PASSWORD_RESET_EXPIRE_MINUTES=30
+SSO_SHARED_SECRET=<secret>
 ```
 
 Render backend Start Command:
@@ -222,7 +237,7 @@ It is not yet an enterprise SSO system, Slack/email/calendar integration, HRMS i
 
 ## Authentication And RBAC
 
-Phase 4 adds a real user identity layer. Protected API calls require a Bearer token from `/auth/login` or `/auth/register`.
+Phase 4 adds a real user identity layer. Protected API calls require a Bearer token from `/auth/login`, `/auth/register`, `/auth/refresh`, or `/auth/sso/login`.
 
 Roles:
 
@@ -237,15 +252,18 @@ Access model:
 
 - employees can access their linked employee onboarding record
 - managers can access direct reports linked through `manager_id`
-- HR admins and admins can access all onboarding records and workflow operations
+- HR admins and admins can access onboarding records and workflow operations inside their tenant
 - only HR admins and admins can reindex assistant knowledge
 - the assistant uses the authenticated user's role from the JWT-backed user record, not request-body role text
+- access tokens are short-lived and refresh tokens are stored hashed server-side
+- auth events are written to `auth_audit_logs`
+- password reset tokens are stored hashed server-side
 
 Production note: replace the development `JWT_SECRET` with a long random secret in every deployed environment.
 
 ## Migration Note
 
-The current implementation uses a small database adapter and a repeatable `schema.sql` file against PostgreSQL. Alembic is not implemented yet. If schema changes become frequent across deployed environments, add Alembic or dedicated migration scripts before making destructive table changes.
+The project now includes Alembic scaffolding in `alembic/`. `schema.sql` remains available for fresh local initialization, while Alembic should be used for deployed schema evolution.
 
 ## Repository Structure
 
@@ -253,6 +271,7 @@ The current implementation uses a small database adapter and a repeatable `schem
 agents/               LangGraph agent logic and workflow state
 backend/              FastAPI app and routes
 database/             relational schema, connection adapter, and repositories
+alembic/              database migration scaffold and versions
 docs/                 Architecture, API, workflow, and portfolio documentation
 frontend/             Streamlit dashboard
 knowledge/            Approved onboarding knowledge for assistant answers

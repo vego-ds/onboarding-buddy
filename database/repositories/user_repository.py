@@ -25,6 +25,7 @@ def create_user(
     email,
     password_hash,
     role,
+    tenant_id="TENANT_DEFAULT",
     employee_id=None,
     manager_id=None,
 ):
@@ -37,6 +38,7 @@ def create_user(
     query = """
     INSERT INTO users (
         user_id,
+        tenant_id,
         name,
         email,
         password_hash,
@@ -46,7 +48,7 @@ def create_user(
         created_at,
         updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     with get_connection() as connection:
@@ -54,6 +56,7 @@ def create_user(
             query,
             (
                 user_id,
+                tenant_id,
                 name,
                 normalize_email(email),
                 password_hash,
@@ -93,6 +96,21 @@ def get_user_by_email(email):
     return dict(row)
 
 
+def get_user_by_email_and_tenant(email, tenant_id):
+    query = "SELECT * FROM users WHERE email = ? AND tenant_id = ?"
+
+    with get_connection() as connection:
+        row = connection.execute(
+            query,
+            (normalize_email(email), tenant_id),
+        ).fetchone()
+
+    if row is None:
+        return None
+
+    return dict(row)
+
+
 def get_user_by_employee_id(employee_id):
     query = "SELECT * FROM users WHERE employee_id = ?"
 
@@ -120,6 +138,24 @@ def list_users_by_manager_id(manager_id):
         ).fetchall()
 
     return [dict(row) for row in rows]
+
+
+def update_user_password_hash(user_id, password_hash):
+    now = datetime.now(UTC).isoformat()
+    query = """
+    UPDATE users
+    SET password_hash = ?, updated_at = ?
+    WHERE user_id = ?
+    """
+
+    with get_connection() as connection:
+        cursor = connection.execute(
+            query,
+            (password_hash, now, normalize_user_id(user_id)),
+        )
+        connection.commit()
+
+    return cursor.rowcount
 
 
 def sanitize_user(user):

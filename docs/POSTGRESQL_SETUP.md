@@ -90,4 +90,4 @@ API_BASE_URL = "https://onboarding-buddy-api.onrender.com"
 
 The current implementation uses a small database adapter rather than SQLAlchemy/Alembic. That keeps the migration scoped while preserving the existing repository boundary.
 
-Alembic is not implemented yet. The current `schema.sql` is safe to run repeatedly for creating missing tables and indexes, but it does not migrate existing table definitions. Alembic or dedicated migration scripts should be introduced before making repeated deployed schema changes.
+Alembic scaffolding is now available under `alembic/`. The current `schema.sql` is safe to run repeatedly for fresh local setup, but it does not migrate existing table definitions. Use Alembic for deployed schema evolution before making repeated production schema changes.

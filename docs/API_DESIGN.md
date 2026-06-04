@@ -41,6 +41,11 @@ Streamlit Cloud should set `API_BASE_URL` to the deployed Render backend URL.
 | --- | --- | --- |
 | `POST` | `/auth/register` | Create user and return JWT |
 | `POST` | `/auth/login` | Authenticate user and return JWT |
+| `POST` | `/auth/refresh` | Rotate refresh token and return a fresh access token |
+| `POST` | `/auth/logout` | Revoke refresh token |
+| `POST` | `/auth/password-reset/request` | Request password reset token |
+| `POST` | `/auth/password-reset/confirm` | Complete password reset |
+| `POST` | `/auth/sso/login` | SSO assertion login foundation |
 | `GET` | `/auth/me` | Return authenticated user |
 
 Roles:
@@ -51,6 +56,8 @@ manager
 hr_admin
 admin
 ```
+
+Access tokens are JWT bearer tokens. Refresh tokens and password reset tokens are opaque tokens stored only as hashes in the database.
 
 ### Employees
 

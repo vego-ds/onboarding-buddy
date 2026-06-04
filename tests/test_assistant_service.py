@@ -343,10 +343,10 @@ def test_assistant_route_delegates_chat_request(monkeypatch):
         return {"answer": "done"}
 
     monkeypatch.setattr(assistant_route, "answer_onboarding_question", fake_answer)
+    monkeypatch.setattr(assistant_route, "assert_employee_access", lambda *_args: None)
 
     request = AssistantChatRequest(
         question=" What is next? ",
-        user_role="HR",
         employee_id="EMP_12345678",
     )
     response = assistant_route.chat_with_assistant(request, current_user=current_user)

@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
+from database.repositories.employee_repository import get_employee_by_id
 from database.db import get_connection
 
 
@@ -17,20 +18,24 @@ def create_task_dependency(employee_id, task_id, depends_on_task_id):
 
     dependency_id = f"DEPENDENCY_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
+    employee = get_employee_by_id(employee_id)
+    tenant_id = employee.get("tenant_id", "TENANT_DEFAULT") if employee else "TENANT_DEFAULT"
 
     query = """
     INSERT INTO task_dependencies (
         dependency_id,
+        tenant_id,
         employee_id,
         task_id,
         depends_on_task_id,
         created_at
     )
-    VALUES (?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?)
     """
 
     values = (
         dependency_id,
+        tenant_id,
         employee_id.upper(),
         task_id,
         depends_on_task_id,

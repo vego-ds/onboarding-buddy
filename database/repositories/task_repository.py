@@ -7,6 +7,7 @@ from database.repositories.dependency_repository import (
     get_dependencies_for_task,
     get_downstream_tasks,
 )
+from database.repositories.employee_repository import get_employee_by_id
 from database.db import get_connection
 
 VALID_TASK_STATUSES = {"Pending", "In Progress", "Completed", "Blocked", "Failed"}
@@ -19,10 +20,13 @@ def normalize_task_id(task_id):
 def create_task(employee_id, task):
     task_id = f"TASK_{uuid4().hex[:8].upper()}"
     now = datetime.now(UTC).isoformat()
+    employee = get_employee_by_id(employee_id)
+    tenant_id = employee.get("tenant_id", "TENANT_DEFAULT") if employee else "TENANT_DEFAULT"
 
     query = """
     INSERT INTO onboarding_tasks (
         task_id,
+        tenant_id,
         employee_id,
         task_name,
         task_description,
@@ -34,11 +38,12 @@ def create_task(employee_id, task):
         created_at,
         updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """
 
     values = (
         task_id,
+        tenant_id,
         employee_id,
         task["task_name"],
         task.get("task_description", ""),

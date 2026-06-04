@@ -12,6 +12,21 @@ The active database is selected in `database/db.py`. If `DATABASE_URL` is missin
 
 ## Tables
 
+### `tenants`
+
+Stores company or organization boundaries.
+
+Important fields:
+
+- `tenant_id`
+- `tenant_name`
+- `tenant_domain`
+- `sso_provider`
+- `sso_issuer`
+- `sso_audience`
+- `created_at`
+- `updated_at`
+
 ### `employees`
 
 Stores employee onboarding records.
@@ -35,6 +50,7 @@ Stores authenticated application users.
 Important fields:
 
 - `user_id`
+- `tenant_id`
 - `name`
 - `email`
 - `password_hash`
@@ -54,6 +70,49 @@ admin
 ```
 
 `employee_id` links a login to an employee onboarding record. `manager_id` links direct reports to a manager user for manager-scoped access.
+
+### `refresh_tokens`
+
+Stores hashed refresh tokens for token rotation.
+
+Important fields:
+
+- `refresh_token_id`
+- `user_id`
+- `token_hash`
+- `expires_at`
+- `revoked_at`
+- `created_at`
+
+### `password_reset_tokens`
+
+Stores hashed password reset tokens.
+
+Important fields:
+
+- `reset_token_id`
+- `user_id`
+- `token_hash`
+- `expires_at`
+- `used_at`
+- `created_at`
+
+### `auth_audit_logs`
+
+Stores authentication and authorization-relevant events.
+
+Important fields:
+
+- `auth_audit_id`
+- `tenant_id`
+- `user_id`
+- `email`
+- `event_type`
+- `event_status`
+- `event_message`
+- `ip_address`
+- `user_agent`
+- `created_at`
 
 ### `onboarding_tasks`
 
@@ -203,6 +262,9 @@ The schema includes indexes for common operational reads:
 
 - employee creation and onboarding status
 - users by email, role, employee, and manager
+- refresh tokens by user and hash
+- password reset tokens by user and hash
+- auth audit logs by user and tenant
 - employee tasks
 - task status
 - task dependencies
@@ -214,7 +276,7 @@ The schema includes indexes for common operational reads:
 
 ## Repeatable Initialization
 
-`schema.sql` uses `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`, so it can create missing tables and indexes repeatedly.
+`schema.sql` uses `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`, so it can create missing tables and indexes repeatedly for fresh local setup.
 
 Important limitation:
 
@@ -222,4 +284,4 @@ Important limitation:
 schema.sql does not migrate existing table definitions.
 ```
 
-Alembic is not implemented yet. Add Alembic or dedicated migration scripts before making frequent deployed schema changes.
+Alembic scaffolding is now available under `alembic/`. Use Alembic for deployed schema evolution; keep `schema.sql` for fresh local initialization.

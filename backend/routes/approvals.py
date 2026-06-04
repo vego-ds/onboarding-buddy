@@ -20,6 +20,7 @@ def list_approvals(
     approvals = get_approvals(
         employee_id=employee_id,
         approval_status=approval_status,
+        tenant_id=current_user.get("tenant_id", "TENANT_DEFAULT"),
     )
 
     return {

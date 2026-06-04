@@ -1,5 +1,7 @@
 email-validator
+alembic
 fastapi
+sqlalchemy
 uvicorn
 streamlit
 pydantic

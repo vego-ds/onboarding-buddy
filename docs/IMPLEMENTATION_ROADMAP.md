@@ -25,6 +25,12 @@ Phase 2 MVP scope is implemented. Phase 3A and 3B are implemented as a constrain
 - answer guardrails, confidence scoring, citations, and escalation behavior
 - knowledge chunking, deterministic hashed embeddings, and PostgreSQL-backed vector index
 - user authentication, JWT tokens, and RBAC foundation
+- refresh token rotation
+- tenant-aware access boundaries
+- password reset token flow
+- SSO assertion login foundation
+- auth audit events
+- Alembic migration scaffold
 
 ## Completed Phase 1
 
@@ -51,7 +57,7 @@ Phase 2 MVP scope is implemented. Phase 3A and 3B are implemented as a constrain
 - Render PostgreSQL deployment support
 - repeatable schema initialization with `schema.sql`
 
-Alembic is not implemented yet.
+Alembic scaffolding is implemented. Use Alembic for deployed schema evolution and `schema.sql` for fresh local initialization.
 
 ### Workflow Operations
 
@@ -115,6 +121,12 @@ This is a real vector-RAG foundation for the project, but it deliberately avoids
 - `POST /auth/login`
 - `GET /auth/me`
 - JWT bearer tokens
+- refresh-token rotation
+- password reset request and confirm flow
+- SSO assertion login foundation
+- tenant-aware user records
+- auth audit logs
+- Alembic migration scaffold
 - authenticated user dependency
 - roles: `employee`, `manager`, `hr_admin`, `admin`
 - scoped employee, task, workflow, approval, assistant, and reindex access
@@ -159,15 +171,17 @@ API_BASE_URL = "https://onboarding-buddy-api.onrender.com"
 After Phase 3A/3B are verified against deployment, the next architecture milestones should be:
 
 1. Alembic migrations
-2. enterprise SSO or OAuth provider integration
-3. production embedding provider evaluation
-4. pgvector or managed vector database migration
-5. RAG retrieval and answer quality evaluation suite
-6. role-based approval routing
-7. background workers for long-running workflows
-8. notification infrastructure
-9. production observability stack
-10. Policy/Knowledge Agent after assistant retrieval rules are stable
+2. real OAuth/OIDC provider integration
+3. production secrets manager integration
+4. database-level tenant enforcement and migration hardening
+5. production embedding provider evaluation
+6. pgvector or managed vector database migration
+7. RAG retrieval and answer quality evaluation suite
+8. role-based approval routing
+9. background workers for long-running workflows
+10. notification infrastructure
+11. production observability stack
+12. Policy/Knowledge Agent after assistant retrieval rules are stable
 
 ## Roadmap Only
 
@@ -178,8 +192,8 @@ These are not implemented yet:
 - pgvector or managed vector database migration
 - full RAG evaluation benchmark suite
 - email or Slack notifications
-- enterprise SSO
-- multi-tenant organization isolation
+- full OAuth/OIDC provider integration
+- external production secrets manager
 - calendar, chat, and HRMS integrations
 - advanced audit dashboard
 - Alembic migrations

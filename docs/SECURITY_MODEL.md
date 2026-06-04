@@ -6,7 +6,7 @@ The assistant pipeline uses layered controls so user text, retrieved knowledge, 
 
 ## 0. Authentication And RBAC
 
-Phase 4 adds real user identity with JWT bearer tokens.
+Phase 4 adds real user identity with JWT bearer tokens, refresh-token rotation, tenant isolation, SSO assertion login, password reset tokens, and auth audit logs.
 
 Implemented roles:
 
@@ -21,9 +21,11 @@ RBAC rules:
 
 - employees can access only their linked onboarding record
 - managers can access direct reports linked by `manager_id`
-- HR admins and admins can access all onboarding workflows
+- HR admins and admins can access onboarding workflows inside their tenant
 - only HR admins and admins can reindex assistant knowledge
 - the assistant derives role from the authenticated backend user, not request-body text
+- refresh tokens and password reset tokens are stored as hashes
+- auth events are written to `auth_audit_logs`
 
 ## 1. Input Validation Layer
 
@@ -94,6 +96,7 @@ If the answer fails inspection, it is replaced with a safe response and marked f
 ## Current Limitations
 
 - The input classifier is a fast local shim, not a deployed Llama Guard model yet.
-- Enterprise SSO and multi-tenant organization boundaries are not implemented yet.
+- SSO is implemented as an assertion foundation; production should integrate a real OAuth/OIDC provider.
+- Multi-tenant boundaries are implemented at the application RBAC layer; production should add database-level tenant constraints and migration hardening.
 - The PII detector is regex-based and should be replaced or supplemented for production.
 - The guardrail currently protects the assistant path, not every backend route.

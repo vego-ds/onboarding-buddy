@@ -9,6 +9,7 @@ import secrets
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from database.repositories.employee_repository import get_employee_by_id
 from database.repositories.user_repository import (
     get_user_by_id,
     list_users_by_manager_id,
@@ -16,6 +17,7 @@ from database.repositories.user_repository import (
 )
 
 AUTH_TOKEN_EXPIRE_MINUTES = int(os.getenv("AUTH_TOKEN_EXPIRE_MINUTES", "60"))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "30"))
 JWT_ALGORITHM = "HS256"
 JWT_SECRET = os.getenv("JWT_SECRET", "development-only-change-me")
 PASSWORD_ITERATIONS = 210_000
@@ -42,6 +44,22 @@ def hash_password(password):
         PASSWORD_ITERATIONS,
     )
     return f"pbkdf2_sha256${PASSWORD_ITERATIONS}${salt}${derived.hex()}"
+
+
+def validate_production_secrets():
+    app_env = os.getenv("APP_ENV", "development")
+    if app_env == "production" and JWT_SECRET == "development-only-change-me":
+        raise RuntimeError("JWT_SECRET must be set to a production secret.")
+    if app_env == "production" and len(JWT_SECRET) < 32:
+        raise RuntimeError("JWT_SECRET must be at least 32 characters in production.")
+
+
+def generate_opaque_token():
+    return secrets.token_urlsafe(48)
+
+
+def hash_token(token):
+    return hashlib.sha256(str(token).encode("utf-8")).hexdigest()
 
 
 def verify_password(password, password_hash):
@@ -71,6 +89,7 @@ def create_access_token(user, expires_delta=None):
         "sub": user["user_id"],
         "email": user["email"],
         "role": user["role"],
+        "tenant_id": user.get("tenant_id", "TENANT_DEFAULT"),
         "exp": int(expires.timestamp()),
     }
     signing_input = (
@@ -138,6 +157,11 @@ def is_hr_or_admin(user):
 
 def can_access_employee(user, employee_id):
     employee_id = str(employee_id or "").strip().upper()
+    employee = get_employee_by_id(employee_id)
+    if employee is None:
+        return False
+    if employee.get("tenant_id", "TENANT_DEFAULT") != user.get("tenant_id", "TENANT_DEFAULT"):
+        return False
     if is_hr_or_admin(user):
         return True
     if user.get("role") == "employee":
@@ -158,3 +182,6 @@ def assert_employee_access(user, employee_id):
 
 def sanitize_current_user(user):
     return sanitize_user(user)
+
+
+validate_production_secrets()

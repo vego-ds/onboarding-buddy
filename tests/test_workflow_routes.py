@@ -35,6 +35,7 @@ def test_workflow_run_detail_normalizes_id_and_includes_agent_runs(monkeypatch):
 
     monkeypatch.setattr(workflows, "get_workflow_run_by_id", fake_get_workflow_run_by_id)
     monkeypatch.setattr(workflows, "get_agent_runs", fake_get_agent_runs)
+    monkeypatch.setattr(workflows, "assert_employee_access", lambda *_args: None)
 
     response = workflows.get_workflow_run(
         " wf_f32245a0 ",

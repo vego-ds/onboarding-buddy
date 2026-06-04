@@ -31,7 +31,10 @@ def create_employee_record(
     current_user=Depends(require_roles("hr_admin", "admin")),
 ):
     try:
-        created_employee = create_employee(employee)
+        created_employee = create_employee(
+            employee,
+            tenant_id=current_user.get("tenant_id", "TENANT_DEFAULT"),
+        )
         return {
             "employee_id": created_employee["employee_id"],
             "status": "created",
@@ -56,7 +59,10 @@ def get_employees(
     current_user=Depends(get_current_user),
 ):
     if is_hr_or_admin(current_user):
-        employees = list_employees(limit=limit)
+        employees = list_employees(
+            limit=limit,
+            tenant_id=current_user.get("tenant_id", "TENANT_DEFAULT"),
+        )
     elif current_user["role"] == "employee" and current_user.get("employee_id"):
         employee = get_employee_by_id(current_user["employee_id"])
         employees = [employee] if employee else []

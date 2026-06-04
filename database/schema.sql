@@ -1,5 +1,17 @@
+CREATE TABLE IF NOT EXISTS tenants (
+    tenant_id TEXT PRIMARY KEY,
+    tenant_name TEXT NOT NULL,
+    tenant_domain TEXT UNIQUE,
+    sso_provider TEXT,
+    sso_issuer TEXT,
+    sso_audience TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS employees (
     employee_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     employee_name TEXT NOT NULL,
     employee_email TEXT NOT NULL UNIQUE,
     role TEXT NOT NULL,
@@ -8,10 +20,12 @@ CREATE TABLE IF NOT EXISTS employees (
     onboarding_status TEXT DEFAULT 'PENDING',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id)
 );
 
 CREATE TABLE IF NOT EXISTS users (
     user_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     name TEXT NOT NULL,
     email TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
@@ -20,12 +34,49 @@ CREATE TABLE IF NOT EXISTS users (
     manager_id TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
     FOREIGN KEY (manager_id) REFERENCES users(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    refresh_token_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    reset_token_id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS auth_audit_logs (
+    auth_audit_id TEXT PRIMARY KEY,
+    tenant_id TEXT,
+    user_id TEXT,
+    email TEXT,
+    event_type TEXT NOT NULL,
+    event_status TEXT NOT NULL,
+    event_message TEXT NOT NULL,
+    ip_address TEXT,
+    user_agent TEXT,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
 CREATE TABLE IF NOT EXISTS onboarding_tasks (
     task_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     employee_id TEXT NOT NULL,
     task_name TEXT NOT NULL,
     task_description TEXT,
@@ -36,15 +87,18 @@ CREATE TABLE IF NOT EXISTS onboarding_tasks (
     assigned_owner TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
 CREATE TABLE IF NOT EXISTS task_dependencies (
     dependency_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     employee_id TEXT NOT NULL,
     task_id TEXT NOT NULL,
     depends_on_task_id TEXT NOT NULL,
     created_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
     FOREIGN KEY (task_id) REFERENCES onboarding_tasks(task_id),
     FOREIGN KEY (depends_on_task_id) REFERENCES onboarding_tasks(task_id),
@@ -53,6 +107,7 @@ CREATE TABLE IF NOT EXISTS task_dependencies (
 
 CREATE TABLE IF NOT EXISTS approvals (
     approval_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     employee_id TEXT NOT NULL,
     related_task_id TEXT,
     action_type TEXT NOT NULL,
@@ -61,11 +116,13 @@ CREATE TABLE IF NOT EXISTS approvals (
     reviewed_by TEXT,
     reviewed_at TEXT,
     created_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
     log_id TEXT PRIMARY KEY,
+    tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
     employee_id TEXT,
     workflow_run_id TEXT,
     event_type TEXT NOT NULL,
@@ -78,6 +135,7 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 
 CREATE TABLE IF NOT EXISTS workflow_runs (
     workflow_run_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     employee_id TEXT NOT NULL,
     workflow_status TEXT DEFAULT 'Running',
     current_node TEXT,
@@ -89,11 +147,13 @@ CREATE TABLE IF NOT EXISTS workflow_runs (
     completed_at TEXT,
     llm_provider TEXT DEFAULT 'OpenRouter',
     llm_model TEXT,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
 CREATE TABLE IF NOT EXISTS agent_runs (
     agent_run_id TEXT PRIMARY KEY,
+    tenant_id TEXT DEFAULT 'TENANT_DEFAULT',
     workflow_run_id TEXT,
     employee_id TEXT,
     agent_name TEXT NOT NULL,
@@ -109,12 +169,14 @@ CREATE TABLE IF NOT EXISTS agent_runs (
     llm_model TEXT,
     started_at TEXT NOT NULL,
     completed_at TEXT,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     FOREIGN KEY (workflow_run_id) REFERENCES workflow_runs(workflow_run_id),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
 CREATE TABLE IF NOT EXISTS workflow_state (
     state_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     workflow_run_id TEXT NOT NULL,
     employee_id TEXT NOT NULL,
     current_node TEXT,
@@ -129,12 +191,14 @@ CREATE TABLE IF NOT EXISTS workflow_state (
     agent_execution_history_json TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
     FOREIGN KEY (workflow_run_id) REFERENCES workflow_runs(workflow_run_id),
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
 CREATE TABLE IF NOT EXISTS knowledge_chunks (
     chunk_id TEXT PRIMARY KEY,
+    tenant_id TEXT NOT NULL DEFAULT 'TENANT_DEFAULT',
     source TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
@@ -142,14 +206,37 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
     embedding_json TEXT NOT NULL,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
-    UNIQUE (source, content_hash)
+    FOREIGN KEY (tenant_id) REFERENCES tenants(tenant_id),
+    UNIQUE (tenant_id, source, content_hash)
 );
+
+INSERT INTO tenants (
+    tenant_id,
+    tenant_name,
+    tenant_domain,
+    created_at,
+    updated_at
+)
+VALUES (
+    'TENANT_DEFAULT',
+    'Default Tenant',
+    NULL,
+    CURRENT_TIMESTAMP,
+    CURRENT_TIMESTAMP
+)
+ON CONFLICT (tenant_id) DO NOTHING;
 
 CREATE INDEX IF NOT EXISTS idx_employees_created_at
 ON employees(created_at);
 
+CREATE INDEX IF NOT EXISTS idx_employees_tenant_id
+ON employees(tenant_id);
+
 CREATE INDEX IF NOT EXISTS idx_users_email
 ON users(email);
+
+CREATE INDEX IF NOT EXISTS idx_users_tenant_id
+ON users(tenant_id);
 
 CREATE INDEX IF NOT EXISTS idx_users_role
 ON users(role);
@@ -159,6 +246,24 @@ ON users(employee_id);
 
 CREATE INDEX IF NOT EXISTS idx_users_manager_id
 ON users(manager_id);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user_id
+ON refresh_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token_hash
+ON refresh_tokens(token_hash);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id
+ON password_reset_tokens(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token_hash
+ON password_reset_tokens(token_hash);
+
+CREATE INDEX IF NOT EXISTS idx_auth_audit_logs_user_created_at
+ON auth_audit_logs(user_id, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_auth_audit_logs_tenant_created_at
+ON auth_audit_logs(tenant_id, created_at);
 
 CREATE INDEX IF NOT EXISTS idx_employees_onboarding_status
 ON employees(onboarding_status);

@@ -42,6 +42,12 @@ Phase 3 adds a constrained onboarding assistant that answers questions from appr
 - PostgreSQL-backed `knowledge_chunks` index
 - Authentication and RBAC foundation
 - JWT-backed user identity
+- Refresh token rotation
+- Tenant-aware access controls
+- SSO assertion login foundation
+- Password reset token flow
+- Auth audit events
+- Alembic migration scaffold
 - Assistant role derived from authenticated backend user
 - pytest coverage for agents, repositories, route behavior, and database configuration
 
@@ -59,6 +65,7 @@ Implemented now:
 - onboarding assistant foundation
 - vector-RAG foundation over approved knowledge chunks
 - authentication and RBAC foundation
+- refresh tokens, password reset, tenant boundaries, and auth audit foundation
 
 Roadmap only:
 
@@ -66,12 +73,12 @@ Roadmap only:
 - external embedding provider integration
 - pgvector or managed vector database migration
 - email or Slack notifications
-- enterprise SSO
-- multi-tenant organization isolation
+- full OAuth/OIDC provider integration
+- external production secrets manager
 - Alembic migrations
 - background workers
 - production observability stack
 
 ## Outcome
 
-The project has moved from an AI planning demo into a credible workflow orchestration MVP. Phase 3 adds a controlled assistant plus vector-RAG foundation, and Phase 4 adds real user identity and RBAC. The next production milestones are migrations, enterprise SSO, external embedding evaluation, and deployment verification against live PostgreSQL.
+The project has moved from an AI planning demo into a credible workflow orchestration MVP. Phase 3 adds a controlled assistant plus vector-RAG foundation, and Phase 4 adds real user identity, RBAC, refresh tokens, tenant-aware access, password reset, SSO assertion support, auth audit events, and Alembic scaffolding. The next production milestones are real OAuth/OIDC provider integration, production secrets management, database-level tenant hardening, external embedding evaluation, and deployment verification against live PostgreSQL.
