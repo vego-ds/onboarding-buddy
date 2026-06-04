@@ -168,20 +168,19 @@ API_BASE_URL = "https://onboarding-buddy-api.onrender.com"
 
 ## Recommended Next Milestones
 
-After Phase 3A/3B are verified against deployment, the next architecture milestones should be:
+After the v1.0.0 foundation is tagged, the next architecture milestones should be modular add-ons:
 
-1. Alembic migrations
-2. real OAuth/OIDC provider integration
-3. production secrets manager integration
-4. database-level tenant enforcement and migration hardening
-5. production embedding provider evaluation
-6. pgvector or managed vector database migration
-7. RAG retrieval and answer quality evaluation suite
-8. role-based approval routing
-9. background workers for long-running workflows
-10. notification infrastructure
-11. production observability stack
-12. Policy/Knowledge Agent after assistant retrieval rules are stable
+1. real OAuth/OIDC provider integration
+2. production secrets manager integration
+3. database-level tenant enforcement and migration hardening
+4. production embedding provider evaluation
+5. pgvector or managed vector database migration
+6. RAG retrieval and answer quality evaluation suite
+7. role-based approval routing
+8. background workers for long-running workflows
+9. notification infrastructure
+10. production observability stack
+11. Policy/Knowledge Agent after assistant retrieval rules are stable
 
 ## Roadmap Only
 
@@ -196,7 +195,7 @@ These are not implemented yet:
 - external production secrets manager
 - calendar, chat, and HRMS integrations
 - advanced audit dashboard
-- Alembic migrations
+- Alembic migration hardening
 - background workers
-- multi-user roles
+- admin knowledge upload UI
 - production observability stack

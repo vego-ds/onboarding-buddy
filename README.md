@@ -4,6 +4,14 @@ Onboarding Buddy is an AI-assisted employee onboarding workflow platform. It com
 
 The project is intentionally scoped as a controlled workflow orchestration prototype, not an unrestricted autonomous agent.
 
+## Project Status
+
+`v1.0.0` marks the complete secure agentic onboarding platform foundation.
+
+Onboarding Buddy now represents a secure, multi-tenant onboarding automation platform that combines agentic workflow orchestration, task and approval management, a grounded vector-RAG assistant, defense-in-depth AI guardrails, JWT authentication, RBAC, audit logging, refresh-token handling, password-reset foundation, SSO foundation, PostgreSQL persistence, Alembic migration scaffolding, and a Streamlit operations frontend.
+
+The core architecture is complete. Future work should be added as modules on top of this foundation rather than by rewriting the platform base.
+
 ## Implemented Now
 
 - Supervisor Agent
@@ -65,7 +73,8 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - Advanced audit dashboard
 - Full enterprise SSO/OAuth provider integration
 - Background workers
-- Multi-user roles
+- Admin knowledge upload UI
+- Cloud deployment hardening
 - Production observability stack
 
 ## Tech Stack
