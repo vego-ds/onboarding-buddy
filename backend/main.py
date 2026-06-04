@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from backend.routes.approvals import router as approvals_router
+from backend.routes.assistant import router as assistant_router
 from backend.routes.employees import router as employees_router
 from backend.routes.tasks import router as tasks_router
 from backend.routes.workflows import router as workflows_router
@@ -18,6 +19,7 @@ app.include_router(employees_router)
 app.include_router(approvals_router)
 app.include_router(tasks_router)
 app.include_router(workflows_router)
+app.include_router(assistant_router)
 
 
 @app.get("/")
@@ -25,7 +27,7 @@ def root():
     return {
         "app": "Onboarding Buddy",
         "status": "running",
-        "phase": "Phase 2 - Workflow Operations MVP",
+        "phase": "Phase 3 - Assistant and Vector RAG Foundation",
     }
 
 

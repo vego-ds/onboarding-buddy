@@ -4,7 +4,7 @@
 
 Phase 1 is complete.
 
-Phase 2 MVP scope is implemented and in stabilization:
+Phase 2 MVP scope is implemented. Phase 3A and 3B are implemented as a constrained onboarding assistant and vector-RAG foundation.
 
 - PostgreSQL support
 - Render PostgreSQL deployment support
@@ -19,6 +19,11 @@ Phase 2 MVP scope is implemented and in stabilization:
 - timeline events
 - frontend Operations workspace
 - tests covering Phase 2 behavior
+- approved-source onboarding assistant foundation
+- role-aware assistant responses
+- optional employee workflow context in assistant answers
+- answer guardrails, confidence scoring, citations, and escalation behavior
+- knowledge chunking, deterministic hashed embeddings, and PostgreSQL-backed vector index
 
 ## Completed Phase 1
 
@@ -68,6 +73,37 @@ Alembic is not implemented yet.
 - employee timeline API
 - Operations workspace workflow visibility
 
+## Completed Phase 3A
+
+### Strengthened Assistant Foundation
+
+- `POST /assistant/chat`
+- Streamlit Assistant tab
+- approved local knowledge files under `knowledge/`
+- stakeholder role normalization for Employee, Manager, HR, IT, and Security
+- optional employee workflow context from existing repositories
+- OpenRouter answer synthesis with deterministic source-grounded fallback
+- insufficient-knowledge guardrails
+- source citation metadata
+- confidence scoring and labels
+- escalation messages for low-confidence answers
+- tests for fallback, role context, unsupported answers, and route behavior
+
+## Completed Phase 3B
+
+### Vector RAG Foundation
+
+- approved knowledge document chunking
+- deterministic local hashed embeddings
+- cosine similarity retrieval
+- PostgreSQL-backed `knowledge_chunks` table
+- `POST /assistant/knowledge/reindex`
+- retrieval mode reporting
+- Streamlit source/citation display
+- tests for chunk creation, indexing, confidence, and reindex routing
+
+This is a real vector-RAG foundation for the project, but it deliberately avoids a network-dependent embedding provider. A production upgrade should evaluate external embeddings plus pgvector or a managed vector database.
+
 ## Deployment Verification Checklist
 
 Local PostgreSQL:
@@ -101,26 +137,34 @@ Streamlit Cloud secret:
 API_BASE_URL = "https://onboarding-buddy-api.onrender.com"
 ```
 
-## Recommended Next Phase
+## Recommended Next Milestones
 
-After Phase 2 MVP is deployed and verified, the next architecture milestones should be:
+After Phase 3A/3B are verified against deployment, the next architecture milestones should be:
 
 1. Alembic migrations
 2. authentication and authorization
-3. role-based approval routing
-4. background workers for long-running workflows
-5. notification infrastructure
-6. production observability stack
-7. Policy/Knowledge Agent and RAG only after workflow rules are stable
+3. RBAC enforcement around employee, approval, and assistant access
+4. production embedding provider evaluation
+5. pgvector or managed vector database migration
+6. RAG retrieval and answer quality evaluation suite
+7. role-based approval routing
+8. background workers for long-running workflows
+9. notification infrastructure
+10. production observability stack
+11. Policy/Knowledge Agent after assistant retrieval rules are stable
 
 ## Roadmap Only
 
 These are not implemented yet:
 
 - Policy/Knowledge Agent
-- RAG/vector memory
+- external embedding provider integration
+- pgvector or managed vector database migration
+- full RAG evaluation benchmark suite
 - email or Slack notifications
 - authentication and authorization
+- RBAC enforcement
+- calendar, chat, and HRMS integrations
 - advanced audit dashboard
 - Alembic migrations
 - background workers

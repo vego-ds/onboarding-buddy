@@ -2,7 +2,7 @@
 
 ## Current Architecture
 
-Onboarding Buddy is a Phase 2 workflow operations MVP.
+Onboarding Buddy is a workflow operations MVP with Phase 3A assistant hardening and Phase 3B vector-RAG foundation.
 
 ```text
 Streamlit Frontend
@@ -14,6 +14,11 @@ FastAPI Backend
   +--> Task Routes
   +--> Approval Routes
   +--> Workflow Run Routes
+  +--> Assistant Route
+  |
+  +--> Approved Knowledge Sources
+  |
+  +--> Knowledge Chunk Vector Index
   |
   v
 LangGraph Workflow Service
@@ -49,6 +54,9 @@ PostgreSQL through DATABASE_URL
 - Dependency repository
 - Audit repository
 - Workflow run repository
+- Knowledge repository
+- Assistant service
+- Approved knowledge files
 
 ## Workflow Execution
 
@@ -63,6 +71,19 @@ PostgreSQL through DATABASE_URL
 9. Tasks, approvals, dependencies, audit events, workflow runs, and agent runs are persisted.
 10. Employee status becomes `PLAN_READY` when tasks exist.
 
+## Assistant Flow
+
+1. A user asks a question from the Streamlit Assistant tab.
+2. The frontend calls `POST /assistant/chat`.
+3. The backend normalizes the stakeholder role.
+4. The assistant retrieves approved knowledge chunks using deterministic local embeddings and cosine scoring.
+5. If an employee ID is provided, existing employee, task, approval, and workflow run context is included.
+6. Confidence score, citation metadata, and escalation state are calculated.
+7. OpenRouter synthesizes a concise answer when confidence is sufficient.
+8. If the LLM is unavailable or confidence is low, the assistant returns a deterministic source-grounded fallback or escalation answer.
+
+The assistant is not part of the LangGraph workflow graph yet. It is a separate self-service API layer over approved knowledge and existing workflow records.
+
 ## Persistence
 
 The database stores:
@@ -75,8 +96,11 @@ The database stores:
 - workflow runs
 - agent runs
 - workflow state table reserved for future state snapshots
+- knowledge chunks and embedding JSON for assistant retrieval
 
-PostgreSQL is the Phase 2 runtime database. Repository tests may use in-memory test doubles, but the application database adapter now requires a PostgreSQL `DATABASE_URL`.
+Approved assistant knowledge starts as markdown files under `knowledge/` and is indexed into `knowledge_chunks` with deterministic hashed embeddings.
+
+PostgreSQL is the runtime database. Repository tests may use in-memory test doubles, but the application database adapter now requires a PostgreSQL `DATABASE_URL`.
 
 ## Operational Rules
 
@@ -86,6 +110,8 @@ PostgreSQL is the Phase 2 runtime database. Repository tests may use in-memory t
 - Premature start attempts mark the task `Blocked` and create a timeline event.
 - Approval decisions and upstream completion can unlock blocked tasks back to `Pending`.
 - Workflow run IDs, task IDs, approval IDs, and employee IDs are normalized at repository boundaries where needed.
+- Assistant roles are normalized to Employee, Manager, HR, IT, or Security; unknown roles fall back to Employee.
+- Assistant answers include citations, confidence labels, and escalation guidance when approved sources are weak.
 
 ## Deployment
 
@@ -125,9 +151,12 @@ API_BASE_URL = "https://onboarding-buddy-api.onrender.com"
 The following are not implemented yet:
 
 - Policy/Knowledge Agent
-- RAG/vector memory
+- external embedding provider integration
+- pgvector or managed vector database migration
 - email or Slack notifications
 - authentication and authorization
+- RBAC enforcement
+- calendar, chat, and HRMS integrations
 - advanced audit dashboard
 - Alembic migrations
 - background workers

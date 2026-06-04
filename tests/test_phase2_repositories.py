@@ -5,6 +5,7 @@ import pytest
 from database.repositories import approval_repository, task_repository
 from database.repositories import audit_repository, dependency_repository
 from database.repositories import workflow_run_repository
+from database.repositories import knowledge_repository
 
 
 @pytest.fixture
@@ -92,6 +93,18 @@ def memory_connection(monkeypatch):
             started_at TEXT NOT NULL,
             completed_at TEXT
         );
+
+        CREATE TABLE knowledge_chunks (
+            chunk_id TEXT PRIMARY KEY,
+            source TEXT NOT NULL,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            content_hash TEXT NOT NULL,
+            embedding_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            UNIQUE (source, content_hash)
+        );
         """
     )
 
@@ -100,6 +113,7 @@ def memory_connection(monkeypatch):
     monkeypatch.setattr(audit_repository, "get_connection", lambda: connection)
     monkeypatch.setattr(dependency_repository, "get_connection", lambda: connection)
     monkeypatch.setattr(workflow_run_repository, "get_connection", lambda: connection)
+    monkeypatch.setattr(knowledge_repository, "get_connection", lambda: connection)
 
     yield connection
 
@@ -496,3 +510,27 @@ def test_agent_runs_are_fetched_for_normalized_workflow_run_id(memory_connection
 
     assert len(agent_runs) == 1
     assert agent_runs[0]["workflow_run_id"] == workflow_run["workflow_run_id"]
+
+
+def test_knowledge_chunk_upsert_and_listing(memory_connection):
+    first = knowledge_repository.upsert_knowledge_chunk(
+        source="policies.md",
+        title="Security Policy",
+        content="Access requires approval.",
+        content_hash="hash_1",
+        embedding=[0.1, 0.2, 0.3],
+    )
+    second = knowledge_repository.upsert_knowledge_chunk(
+        source="policies.md",
+        title="Security Policy",
+        content="Access requires manager approval.",
+        content_hash="hash_1",
+        embedding=[0.3, 0.2, 0.1],
+    )
+
+    chunks = knowledge_repository.list_knowledge_chunks()
+
+    assert first["chunk_id"] == second["chunk_id"]
+    assert len(chunks) == 1
+    assert chunks[0]["content"] == "Access requires manager approval."
+    assert chunks[0]["embedding"] == [0.3, 0.2, 0.1]

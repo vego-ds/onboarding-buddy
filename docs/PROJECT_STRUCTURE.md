@@ -382,7 +382,7 @@ Responsibilities:
 
 ## Deferred Agents
 
-These agents are intentionally deferred to Phase 2.
+These agents are intentionally deferred beyond the current workflow graph.
 
 ### Calendar Agent
 
@@ -525,13 +525,13 @@ Responsibilities:
 * provider metadata persistence
 * retry tracking
 
-PostgreSQL is used for the Phase 2 runtime database.
+PostgreSQL is used for the runtime database.
 
 ---
 
 # 10. Memory Layer
 
-The memory layer supports vector memory functionality.
+The future memory layer will support vector memory functionality.
 
 Potential use cases:
 

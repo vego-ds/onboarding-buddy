@@ -1,6 +1,6 @@
 # Onboarding Buddy
 
-Onboarding Buddy is an AI-assisted employee onboarding workflow platform. It combines a Streamlit operations workspace, FastAPI backend, LangGraph supervisor workflow, OpenRouter LLM integration, and relational persistence to create employee records, generate onboarding plans, manage approvals, enforce task dependencies, and inspect workflow execution history.
+Onboarding Buddy is an AI-assisted employee onboarding workflow platform. It combines a Streamlit operations workspace, FastAPI backend, LangGraph supervisor workflow, OpenRouter LLM integration, approved-source onboarding assistant, and relational persistence to create employee records, generate onboarding plans, manage approvals, enforce task dependencies, and inspect workflow execution history.
 
 The project is intentionally scoped as a controlled workflow orchestration prototype, not an unrestricted autonomous agent.
 
@@ -27,14 +27,26 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - Approval unlock logic
 - Timeline events
 - Frontend Operations workspace
-- Tests covering Phase 2 behavior
+- Phase 3 onboarding assistant foundation using approved local knowledge sources
+- Role-aware assistant responses for Employee, Manager, HR, IT, and Security contexts
+- Optional employee workflow context in assistant responses
+- Answer guardrails for insufficient approved knowledge
+- Source citations, confidence scoring, and escalation messages
+- Approved knowledge chunking and deterministic hashed embeddings
+- PostgreSQL-backed `knowledge_chunks` vector index
+- Assistant knowledge reindex endpoint
+- Tests covering Phase 2 behavior and Phase 3 assistant/RAG behavior
 
 ## Roadmap Only
 
 - Policy/Knowledge Agent
-- RAG/vector memory
+- External embedding provider integration
+- pgvector or managed vector database upgrade
+- RAG evaluation benchmark suite
 - Email or Slack notifications
 - Authentication and authorization
+- RBAC enforcement
+- Calendar, chat, and HRMS integrations
 - Advanced audit dashboard
 - Alembic migrations
 - Background workers
@@ -63,6 +75,10 @@ Streamlit Frontend
 FastAPI Backend
   |
   +--> Employee / Task / Approval / Workflow APIs
+  |
+  +--> Assistant API
+       |
+       +--> Approved Knowledge Sources
   |
   v
 LangGraph Workflow
@@ -100,6 +116,8 @@ The frontend never calls agents directly. It calls FastAPI endpoints, and the ba
 | `PATCH` | `/approvals/{approval_id}` | Record approval decision |
 | `GET` | `/workflow-runs` | List workflow executions |
 | `GET` | `/workflow-runs/{workflow_run_id}` | Get workflow and agent execution details |
+| `POST` | `/assistant/chat` | Ask the approved-source onboarding assistant |
+| `POST` | `/assistant/knowledge/reindex` | Rebuild the approved knowledge vector index |
 
 ## Local Setup
 
@@ -184,6 +202,12 @@ http://127.0.0.1:8000
 ./venv/bin/python -m pytest
 ```
 
+## Assistant And RAG Scope
+
+Phase 3A strengthened the assistant with answer guardrails, citations, confidence scoring, escalation behavior, and tests. Phase 3B adds a vector-RAG foundation using approved local knowledge chunks, deterministic hashed embeddings, PostgreSQL-backed `knowledge_chunks`, and cosine retrieval.
+
+It is not yet a production security boundary, authentication layer, Slack/email/calendar integration, HRMS integration, external embedding pipeline, or managed vector database deployment.
+
 ## Migration Note
 
 The current implementation uses a small database adapter and a repeatable `schema.sql` file against PostgreSQL. Alembic is not implemented yet. If schema changes become frequent across deployed environments, add Alembic or dedicated migration scripts before making destructive table changes.
@@ -196,6 +220,7 @@ backend/              FastAPI app and routes
 database/             relational schema, connection adapter, and repositories
 docs/                 Architecture, API, workflow, and portfolio documentation
 frontend/             Streamlit dashboard
+knowledge/            Approved onboarding knowledge for assistant answers
 llm/                  OpenRouter client
 schemas/              Pydantic request models
 scripts/              Local workflow utilities

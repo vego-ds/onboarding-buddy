@@ -94,6 +94,30 @@ Agent execution is persisted after each onboarding workflow run:
 
 The frontend Operations workspace reads these records through FastAPI workflow observability endpoints.
 
+## Assistant Service
+
+The Phase 3 onboarding assistant foundation is implemented as a backend service and API route, not as a LangGraph agent.
+
+Location:
+
+```text
+backend/services/assistant_service.py
+backend/routes/assistant.py
+knowledge/
+```
+
+Responsibilities:
+
+- retrieve relevant approved local onboarding knowledge
+- chunk approved knowledge and retrieve it with deterministic local embeddings
+- normalize stakeholder roles for Employee, Manager, HR, IT, and Security
+- optionally include employee workflow context
+- return citations, confidence labels, and escalation guidance
+- synthesize answers through OpenRouter when available
+- fall back to deterministic source-grounded answers when the LLM is unavailable
+
+This keeps self-service Q&A available without expanding the active workflow graph prematurely.
+
 ## Not Implemented Yet
 
 These agents or capabilities are roadmap-only:
@@ -106,6 +130,7 @@ These agents or capabilities are roadmap-only:
 - Manager Follow-up Agent
 - email drafting or sending
 - Slack or Microsoft Teams notifications
-- RAG/vector-memory retrieval
+- external embedding provider integration
+- pgvector or managed vector database migration
 
 The current implementation deliberately keeps the active graph small: Supervisor, Intake, and Task Planning only.

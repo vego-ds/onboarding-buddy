@@ -119,6 +119,8 @@ def inject_styles():
         .task-card,
         .profile-card,
         .workflow-card,
+        .assistant-answer,
+        .source-card,
         .empty-state {
             background: var(--surface);
             border: 1px solid var(--line);
@@ -155,9 +157,29 @@ def inject_styles():
         .employee-panel,
         .task-card,
         .profile-card,
-        .workflow-card {
+        .workflow-card,
+        .assistant-answer,
+        .source-card {
             padding: 1rem;
             margin-bottom: 0.75rem;
+        }
+        .assistant-answer {
+            border-left: 4px solid var(--accent);
+            line-height: 1.55;
+        }
+        .source-card {
+            background: var(--surface-subtle);
+        }
+        .source-title {
+            color: var(--heading);
+            font-size: 0.95rem;
+            font-weight: 740;
+            margin-bottom: 0.25rem;
+        }
+        .source-meta {
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-bottom: 0.4rem;
         }
         .employee-name,
         .task-title {
@@ -209,6 +231,13 @@ def inject_styles():
         .chip-danger { background: var(--danger-soft); color: var(--danger); border-color: #fecaca; }
         .chip-locked { background: var(--danger-soft); color: var(--danger); border-color: #fecaca; }
         .chip-unlocked { background: var(--success-soft); color: var(--success); border-color: #bbf7d0; }
+        .assistant-meta {
+            align-items: center;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            margin: 0.35rem 0 0.75rem;
+        }
         .task-card-locked {
             border-color: #fecaca;
             border-left: 4px solid var(--danger);
@@ -399,6 +428,19 @@ def fetch_task_dependencies(task_id):
 
 def fetch_employee_timeline(employee_id):
     return request_api("GET", f"/employees/{employee_id}/timeline")
+
+
+def send_assistant_message(question, user_role, employee_id=None):
+    payload = {
+        "question": question,
+        "user_role": user_role,
+        "employee_id": employee_id or None,
+    }
+    return request_api("POST", "/assistant/chat", json=payload, timeout=60)
+
+
+def reindex_assistant_knowledge():
+    return request_api("POST", "/assistant/knowledge/reindex", timeout=60)
 
 
 def parse_joining_date(joining_date):
@@ -1012,6 +1054,161 @@ def render_tasks_tab(employees):
         render_tasks(data)
 
 
+def render_assistant_tab(employees):
+    render_section("Self Service", "Onboarding Assistant")
+    st.caption(
+        "Ask questions grounded in approved onboarding knowledge and current workflow context."
+    )
+
+    left, right = st.columns([1, 1], gap="large")
+    employee_options = build_employee_options(employees)
+
+    with left:
+        user_role = st.selectbox(
+            "Stakeholder role",
+            options=["Employee", "Manager", "HR", "IT", "Security"],
+            key="assistant_role",
+        )
+    with right:
+        selected_label = st.selectbox(
+            "Optional employee context",
+            options=["No employee context", *employee_options.keys()],
+            key="assistant_employee_select",
+        )
+
+    selected_employee_id = employee_options.get(selected_label, "")
+    manual_employee_id = st.text_input(
+        "Or enter employee ID for context",
+        placeholder="EMP_XXXXXXXX",
+        key="assistant_employee_id",
+    )
+    context_employee_id = normalize_employee_id(manual_employee_id) or selected_employee_id
+
+    with st.form("assistant_question_form", clear_on_submit=False):
+        question = st.text_area(
+            "Question",
+            placeholder="What should I do next if a laptop access task is locked?",
+            height=120,
+            key="assistant_question",
+        )
+        submitted = st.form_submit_button(
+            "Ask Assistant",
+            type="primary",
+            use_container_width=True,
+        )
+
+    if submitted:
+        if not question.strip():
+            st.warning("Enter a question for the assistant.")
+            return
+
+        with st.spinner("Checking approved knowledge and workflow context..."):
+            data, error = send_assistant_message(
+                question.strip(),
+                user_role,
+                context_employee_id,
+            )
+
+        if error:
+            render_error_state("Assistant unavailable", error)
+            return
+
+        answer = data.get("answer", "No answer returned.")
+        confidence = data.get("confidence_score", 0)
+        confidence_label = format_status(data.get("confidence_label", "unknown"))
+        retrieval_mode = format_status(data.get("retrieval_mode", "unknown"))
+        confidence_class = chip_class_for_status(
+            "Completed" if confidence_label == "High" else confidence_label
+        )
+        escalation_chip = (
+            '<span class="chip chip-warning">Escalation recommended</span>'
+            if data.get("needs_escalation")
+            else '<span class="chip chip-success">Grounded answer</span>'
+        )
+        st.markdown(
+            f"""
+            <div class="assistant-meta">
+                <span class="chip {confidence_class}">Confidence: {escape(confidence_label)} ({escape(str(confidence))})</span>
+                <span class="chip">Retrieval: {escape(retrieval_mode)}</span>
+                {escalation_chip}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            f"""
+            <div class="assistant-answer">
+                {escape(answer).replace(chr(10), "<br />")}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.caption(
+            "LLM synthesis with approved sources"
+            if data.get("used_llm")
+            else "Deterministic source-grounded fallback"
+        )
+
+        citations = data.get("citations", [])
+        if citations:
+            st.markdown("**Citations**")
+            for citation in citations:
+                st.markdown(
+                    f"""
+                    <div class="source-card">
+                        <div class="source-title">{escape(citation.get("label", ""))} {escape(citation.get("title", "Source"))}</div>
+                        <div class="source-meta">
+                            {escape(citation.get("source", ""))} · relevance {escape(str(citation.get("relevance_score", 0)))}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        sources = data.get("sources", [])
+        if sources:
+            with st.expander("Sources"):
+                for source in sources:
+                    st.markdown(
+                        f"""
+                        <div class="source-card">
+                            <div class="source-title">{escape(source.get("label", ""))} {escape(source.get("title", "Source"))}</div>
+                            <div class="source-meta">
+                                {escape(source.get("source", ""))} · relevance {escape(str(source.get("relevance_score", 0)))}
+                            </div>
+                            <div class="task-description">{escape(source.get("excerpt", ""))}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+        if data.get("needs_escalation") and data.get("escalation_message"):
+            st.warning(data["escalation_message"])
+
+        employee_context = data.get("employee_context")
+        if employee_context:
+            with st.expander("Workflow context used"):
+                st.json(employee_context)
+    else:
+        render_empty_state(
+            "Ask a policy or workflow question",
+            "The assistant can explain onboarding tasks, approvals, blockers, and next steps using approved knowledge sources.",
+        )
+
+    with st.expander("Knowledge index"):
+        st.caption("Rebuild the approved knowledge vector index after editing files under knowledge/.")
+        if st.button("Reindex Approved Knowledge", use_container_width=True):
+            with st.spinner("Rebuilding assistant knowledge index..."):
+                data, error = reindex_assistant_knowledge()
+            if error:
+                render_error_state("Knowledge reindex failed", error)
+            else:
+                st.success(
+                    f"Indexed {data.get('chunk_count', 0)} chunks from {len(data.get('sources', []))} sources."
+                )
+                st.json(data)
+
+
 def render_employee_workspace(employees):
     render_section("Workspace", "Employee Operating View")
     if not employees:
@@ -1187,7 +1384,7 @@ def render_operations_tab(employees, all_approvals):
             </div>
             <div class="metric-tile">
                 <div class="metric-label">Workflow</div>
-                <div class="metric-value">Phase 2</div>
+                <div class="metric-value">Phase 3</div>
             </div>
         </div>
         """,
@@ -1348,7 +1545,7 @@ inject_styles()
 
 with st.sidebar:
     st.subheader("Onboarding Buddy")
-    st.caption("Workflow Operations MVP")
+    st.caption("Workflow Operations + Assistant")
     health, health_error = request_api("GET", "/health", timeout=5)
     if health_error:
         st.markdown(
@@ -1383,7 +1580,7 @@ st.markdown(
     <section class="app-header">
         <h1 class="app-title">Onboarding Buddy</h1>
         <p class="app-subtitle">
-            Create employee records, generate onboarding plans, review HR approvals, and update onboarding task status from one focused workspace.
+            Create employee records, generate onboarding plans, review approvals, update task status, and answer onboarding questions from approved knowledge.
         </p>
     </section>
     """,
@@ -1400,12 +1597,15 @@ if approvals_error:
 
 render_metric_strip(employees, approvals)
 
-tab_workspace, tab_create, tab_generate, tab_tasks, tab_operations, tab_directory = st.tabs(
-    ["Workspace", "Create", "Generate Plan", "Tasks", "Operations", "Directory"]
+tab_workspace, tab_assistant, tab_create, tab_generate, tab_tasks, tab_operations, tab_directory = st.tabs(
+    ["Workspace", "Assistant", "Create", "Generate Plan", "Tasks", "Operations", "Directory"]
 )
 
 with tab_workspace:
     render_employee_workspace(employees)
+
+with tab_assistant:
+    render_assistant_tab(employees)
 
 with tab_create:
     render_create_tab()

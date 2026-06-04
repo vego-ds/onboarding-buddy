@@ -10,6 +10,11 @@ flowchart TD
     API --> Tasks["Task Routes"]
     API --> Approvals["Approval Routes"]
     API --> Runs["Workflow Run Routes"]
+    API --> Assistant["Assistant Routes"]
+    Assistant --> AssistantService["Assistant Service"]
+    AssistantService --> Knowledge["Approved Knowledge Files"]
+    AssistantService --> VectorIndex["Knowledge Chunk Vector Index"]
+    AssistantService --> LLM
     API --> Service["Workflow Service"]
     Service --> Graph["LangGraph StateGraph"]
     Graph --> Supervisor["Supervisor Agent"]
@@ -23,6 +28,7 @@ flowchart TD
     Tasks --> Repos
     Approvals --> Repos
     Runs --> Repos
+    AssistantService --> Repos
     Service --> Repos
     Repos --> DB[("PostgreSQL")]
 ```
@@ -73,4 +79,25 @@ flowchart TD
     ApprovalAPI --> Unlock["Approval Unlock Logic"]
     Rules --> Audit["Timeline Events"]
     Unlock --> Audit
+```
+
+## Assistant Retrieval Flow
+
+```mermaid
+flowchart TD
+    User["Stakeholder"] --> UI["Assistant Tab"]
+    UI --> Chat["POST /assistant/chat"]
+    Chat --> Role["Normalize Role"]
+    Role --> Retrieve["Vector Retrieval"]
+    Retrieve --> Chunks["knowledge_chunks"]
+    Retrieve --> Context["Optional Employee Workflow Context"]
+    Retrieve --> Score["Confidence and Citations"]
+    Score --> Decision{"Sufficient grounding?"}
+    Decision -->|Yes| LLM["OpenRouter Synthesis"]
+    Decision -->|No| Fallback["Escalation or Deterministic Fallback"]
+    LLM --> Response["Answer With Citations"]
+    Fallback --> Response
+    Reindex["POST /assistant/knowledge/reindex"] --> Files["knowledge/*.md"]
+    Files --> Embed["Deterministic Hashed Embeddings"]
+    Embed --> Chunks
 ```

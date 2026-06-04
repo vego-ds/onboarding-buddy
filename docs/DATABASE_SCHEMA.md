@@ -2,7 +2,7 @@
 
 ## Current Database Support
 
-Phase 2 supports:
+The current runtime database supports:
 
 - PostgreSQL through `DATABASE_URL`
 - local PostgreSQL through `docker-compose.yml`
@@ -153,6 +153,23 @@ Important fields:
 
 Reserved for future persisted workflow state snapshots. The current workflow persists workflow runs and agent runs, but does not yet use this table as a LangGraph checkpoint store.
 
+### `knowledge_chunks`
+
+Stores approved assistant knowledge chunks and deterministic local embeddings for vector-style retrieval.
+
+Important fields:
+
+- `chunk_id`
+- `source`
+- `title`
+- `content`
+- `content_hash`
+- `embedding_json`
+- `created_at`
+- `updated_at`
+
+The schema includes a unique constraint on `(source, content_hash)` so reindexing approved knowledge can update existing chunks without duplicating them.
+
 ## Indexes
 
 The schema includes indexes for common operational reads:
@@ -165,6 +182,7 @@ The schema includes indexes for common operational reads:
 - audit logs by employee and workflow run
 - workflow runs by employee and status
 - agent runs by workflow run and employee
+- knowledge chunks by source and content hash
 
 ## Repeatable Initialization
 

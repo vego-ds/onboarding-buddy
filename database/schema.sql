@@ -119,6 +119,18 @@ CREATE TABLE IF NOT EXISTS workflow_state (
     FOREIGN KEY (employee_id) REFERENCES employees(employee_id)
 );
 
+CREATE TABLE IF NOT EXISTS knowledge_chunks (
+    chunk_id TEXT PRIMARY KEY,
+    source TEXT NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    content_hash TEXT NOT NULL,
+    embedding_json TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    UNIQUE (source, content_hash)
+);
+
 CREATE INDEX IF NOT EXISTS idx_employees_created_at
 ON employees(created_at);
 
@@ -160,3 +172,9 @@ ON agent_runs(workflow_run_id);
 
 CREATE INDEX IF NOT EXISTS idx_agent_runs_employee_id
 ON agent_runs(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_source
+ON knowledge_chunks(source);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_content_hash
+ON knowledge_chunks(content_hash);

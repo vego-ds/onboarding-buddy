@@ -422,7 +422,7 @@ before scaling into enterprise-grade complexity.
 - OpenRouter will be used as the LLM provider for configurable model routing.
 - The selected model will be managed through environment variables.
 - The MVP will include only core agents required for onboarding workflow generation.
-- Calendar Agent and Manager Follow-up Agent will be deferred to Phase 2.
+- Calendar Agent and Manager Follow-up Agent remain future roadmap items.
 
 ## 28. Release Strategy
 

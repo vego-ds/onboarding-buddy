@@ -2,7 +2,7 @@
 
 ## Goal
 
-Show Onboarding Buddy as a Phase 2 AI workflow operations MVP, not just a task-generation demo.
+Show Onboarding Buddy as an AI workflow operations MVP with a first Phase 3 approved-source onboarding assistant, not just a task-generation demo.
 
 ## Setup
 
@@ -30,7 +30,11 @@ streamlit run frontend/app.py
 14. Show the downstream task unlocking.
 15. Show the employee workflow timeline.
 16. Show Recent Workflow Runs and agent execution summaries.
-17. End on the Directory tab.
+17. Open Assistant.
+18. Ask an onboarding question with HR or IT role context.
+19. Show the source-backed answer, confidence score, citation cards, and sources expander.
+20. Optionally show the knowledge reindex control.
+21. End on the Directory tab.
 
 ## Talking Points
 
@@ -40,15 +44,20 @@ streamlit run frontend/app.py
 - Workflow runs and agent runs are persisted for observability.
 - Approval decisions and dependency completion affect task lock state.
 - Timeline events make workflow behavior auditable.
-- PostgreSQL is the Phase 2 runtime database.
+- PostgreSQL is the runtime database.
+- The assistant uses approved local knowledge and optional workflow context.
+- The assistant uses a PostgreSQL-backed chunk index with deterministic local embeddings.
+- The assistant is not yet a production security boundary or external embedding pipeline.
 
 ## Roadmap Callout
 
 The demo should not claim these are implemented:
 
 - Policy/Knowledge Agent
-- RAG/vector memory
+- external embedding provider integration
+- pgvector or managed vector database migration
 - real email or Slack notifications
 - authentication and authorization
+- RBAC enforcement
 - background workers
 - Alembic migrations
