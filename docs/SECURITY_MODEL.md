@@ -4,6 +4,27 @@
 
 The assistant pipeline uses layered controls so user text, retrieved knowledge, and final LLM output are treated as separate trust boundaries.
 
+## 0. Authentication And RBAC
+
+Phase 4 adds real user identity with JWT bearer tokens.
+
+Implemented roles:
+
+```text
+employee
+manager
+hr_admin
+admin
+```
+
+RBAC rules:
+
+- employees can access only their linked onboarding record
+- managers can access direct reports linked by `manager_id`
+- HR admins and admins can access all onboarding workflows
+- only HR admins and admins can reindex assistant knowledge
+- the assistant derives role from the authenticated backend user, not request-body text
+
 ## 1. Input Validation Layer
 
 All incoming assistant questions pass through a fast local safety classifier before retrieval, workflow context lookup, or LLM synthesis.
@@ -73,6 +94,6 @@ If the answer fails inspection, it is replaced with a safe response and marked f
 ## Current Limitations
 
 - The input classifier is a fast local shim, not a deployed Llama Guard model yet.
-- Authentication and RBAC are not implemented yet.
+- Enterprise SSO and multi-tenant organization boundaries are not implemented yet.
 - The PII detector is regex-based and should be replaced or supplemented for production.
 - The guardrail currently protects the assistant path, not every backend route.

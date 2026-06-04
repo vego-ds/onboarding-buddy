@@ -6,6 +6,7 @@
 flowchart TD
     HR["HR User"] --> UI["Streamlit Frontend"]
     UI --> API["FastAPI Backend"]
+    API --> Auth["Auth Routes"]
     API --> Employees["Employee Routes"]
     API --> Tasks["Task Routes"]
     API --> Approvals["Approval Routes"]
@@ -24,6 +25,7 @@ flowchart TD
     Planner --> Supervisor
     Planner --> LLM["OpenRouter LLM"]
     Supervisor --> LLM
+    Auth --> Repos
     Employees --> Repos["Repository Layer"]
     Tasks --> Repos
     Approvals --> Repos

@@ -365,11 +365,16 @@ def inject_styles():
 
 def request_api(method, path, **kwargs):
     timeout = kwargs.pop("timeout", REQUEST_TIMEOUT)
+    headers = kwargs.pop("headers", {})
+    token = st.session_state.get("auth_token")
+    if token:
+        headers = {**headers, "Authorization": f"Bearer {token}"}
     try:
         response = requests.request(
             method,
             f"{API_BASE_URL}{path}",
             timeout=timeout,
+            headers=headers,
             **kwargs,
         )
     except requests.RequestException as error:
@@ -384,6 +389,90 @@ def request_api(method, path, **kwargs):
         detail = response.text
 
     return None, f"{response.status_code}: {detail}"
+
+
+def render_auth_gate():
+    if st.session_state.get("auth_token"):
+        return True
+
+    render_section("Secure Access", "Sign In")
+    st.caption("Authentication is required to access onboarding workflows.")
+    login_tab, register_tab = st.tabs(["Login", "Register"])
+
+    with login_tab:
+        with st.form("login_form"):
+            email = st.text_input("Email", key="login_email")
+            password = st.text_input("Password", type="password", key="login_password")
+            submitted = st.form_submit_button(
+                "Login",
+                type="primary",
+                use_container_width=True,
+            )
+        if submitted:
+            data, error = request_api(
+                "POST",
+                "/auth/login",
+                json={"email": email, "password": password},
+            )
+            if error:
+                render_error_state("Login failed", error)
+            else:
+                st.session_state["auth_token"] = data["access_token"]
+                st.session_state["current_user"] = data["user"]
+                st.success("Logged in.")
+                st.rerun()
+
+    with register_tab:
+        with st.form("register_form"):
+            name = st.text_input("Name", key="register_name")
+            email = st.text_input("Email", key="register_email")
+            password = st.text_input(
+                "Password",
+                type="password",
+                key="register_password",
+            )
+            role = st.selectbox(
+                "Role",
+                options=["employee", "manager", "hr_admin", "admin"],
+                key="register_role",
+            )
+            employee_id = st.text_input(
+                "Employee ID",
+                placeholder="Optional EMP_XXXXXXXX",
+                key="register_employee_id",
+            )
+            manager_id = st.text_input(
+                "Manager user ID",
+                placeholder="Optional USER_XXXXXXXX",
+                key="register_manager_id",
+            )
+            submitted = st.form_submit_button(
+                "Create Account",
+                type="primary",
+                use_container_width=True,
+            )
+        if submitted:
+            data, error = request_api(
+                "POST",
+                "/auth/register",
+                json={
+                    "name": name,
+                    "email": email,
+                    "password": password,
+                    "role": role,
+                    "employee_id": normalize_employee_id(employee_id) or None,
+                    "manager_id": manager_id.strip().upper() or None,
+                },
+            )
+            if error:
+                render_error_state("Registration failed", error)
+            else:
+                st.session_state["auth_token"] = data["access_token"]
+                st.session_state["current_user"] = data["user"]
+                st.success("Account created.")
+                st.rerun()
+
+    return False
 
 
 @st.cache_data(ttl=10)
@@ -430,10 +519,9 @@ def fetch_employee_timeline(employee_id):
     return request_api("GET", f"/employees/{employee_id}/timeline")
 
 
-def send_assistant_message(question, user_role, employee_id=None):
+def send_assistant_message(question, employee_id=None):
     payload = {
         "question": question,
-        "user_role": user_role,
         "employee_id": employee_id or None,
     }
     return request_api("POST", "/assistant/chat", json=payload, timeout=60)
@@ -1064,10 +1152,11 @@ def render_assistant_tab(employees):
     employee_options = build_employee_options(employees)
 
     with left:
-        user_role = st.selectbox(
-            "Stakeholder role",
-            options=["Employee", "Manager", "HR", "IT", "Security"],
-            key="assistant_role",
+        current_user = st.session_state.get("current_user", {})
+        st.text_input(
+            "Authenticated role",
+            value=current_user.get("role", "unknown"),
+            disabled=True,
         )
     with right:
         selected_label = st.selectbox(
@@ -1105,7 +1194,6 @@ def render_assistant_tab(employees):
         with st.spinner("Checking approved knowledge and workflow context..."):
             data, error = send_assistant_message(
                 question.strip(),
-                user_role,
                 context_employee_id,
             )
 
@@ -1546,6 +1634,22 @@ inject_styles()
 with st.sidebar:
     st.subheader("Onboarding Buddy")
     st.caption("Workflow Operations + Assistant")
+    current_user = st.session_state.get("current_user")
+    if current_user:
+        st.markdown(
+            f"""
+            <span class="status-pill status-online">
+                {escape(current_user.get("role", "user"))}
+            </span>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.caption(current_user.get("email", ""))
+        if st.button("Logout", use_container_width=True):
+            st.session_state.pop("auth_token", None)
+            st.session_state.pop("current_user", None)
+            st.cache_data.clear()
+            st.rerun()
     health, health_error = request_api("GET", "/health", timeout=5)
     if health_error:
         st.markdown(
@@ -1586,6 +1690,10 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+if not render_auth_gate():
+    st.caption("Onboarding Buddy")
+    st.stop()
 
 employees, employees_error = fetch_employees()
 approvals, approvals_error = fetch_approvals()

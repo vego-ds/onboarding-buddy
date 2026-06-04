@@ -10,6 +10,20 @@ CREATE TABLE IF NOT EXISTS employees (
     updated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    user_id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL,
+    employee_id TEXT,
+    manager_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
+    FOREIGN KEY (manager_id) REFERENCES users(user_id)
+);
+
 CREATE TABLE IF NOT EXISTS onboarding_tasks (
     task_id TEXT PRIMARY KEY,
     employee_id TEXT NOT NULL,
@@ -133,6 +147,18 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
 
 CREATE INDEX IF NOT EXISTS idx_employees_created_at
 ON employees(created_at);
+
+CREATE INDEX IF NOT EXISTS idx_users_email
+ON users(email);
+
+CREATE INDEX IF NOT EXISTS idx_users_role
+ON users(role);
+
+CREATE INDEX IF NOT EXISTS idx_users_employee_id
+ON users(employee_id);
+
+CREATE INDEX IF NOT EXISTS idx_users_manager_id
+ON users(manager_id);
 
 CREATE INDEX IF NOT EXISTS idx_employees_onboarding_status
 ON employees(onboarding_status);

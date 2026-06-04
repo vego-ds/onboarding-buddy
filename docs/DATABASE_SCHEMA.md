@@ -28,6 +28,33 @@ Important fields:
 - `created_at`
 - `updated_at`
 
+### `users`
+
+Stores authenticated application users.
+
+Important fields:
+
+- `user_id`
+- `name`
+- `email`
+- `password_hash`
+- `role`
+- `employee_id`
+- `manager_id`
+- `created_at`
+- `updated_at`
+
+Valid roles:
+
+```text
+employee
+manager
+hr_admin
+admin
+```
+
+`employee_id` links a login to an employee onboarding record. `manager_id` links direct reports to a manager user for manager-scoped access.
+
 ### `onboarding_tasks`
 
 Stores generated onboarding tasks.
@@ -175,6 +202,7 @@ The schema includes a unique constraint on `(source, content_hash)` so reindexin
 The schema includes indexes for common operational reads:
 
 - employee creation and onboarding status
+- users by email, role, employee, and manager
 - employee tasks
 - task status
 - task dependencies

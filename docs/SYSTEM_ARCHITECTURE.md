@@ -10,6 +10,7 @@ Streamlit Frontend
   v
 FastAPI Backend
   |
+  +--> Auth Routes
   +--> Employee Routes
   +--> Task Routes
   +--> Approval Routes
@@ -41,6 +42,7 @@ PostgreSQL through DATABASE_URL
 
 - Streamlit frontend operations workspace
 - FastAPI backend
+- Authentication and RBAC foundation
 - LangGraph workflow graph
 - Supervisor Agent
 - Intake Agent
@@ -116,6 +118,8 @@ PostgreSQL is the runtime database. Repository tests may use in-memory test doub
 - Assistant roles are normalized to Employee, Manager, HR, IT, or Security; unknown roles fall back to Employee.
 - Assistant answers include citations, confidence labels, and escalation guidance when approved sources are weak.
 - Assistant input, context, tools, and output are protected by layered guardrails documented in `docs/SECURITY_MODEL.md`.
+- Protected API routes require JWT bearer authentication.
+- The assistant uses authenticated backend role context instead of request-body role text.
 
 ## Deployment
 
@@ -158,8 +162,8 @@ The following are not implemented yet:
 - external embedding provider integration
 - pgvector or managed vector database migration
 - email or Slack notifications
-- authentication and authorization
-- RBAC enforcement
+- enterprise SSO
+- multi-tenant organization isolation
 - calendar, chat, and HRMS integrations
 - advanced audit dashboard
 - Alembic migrations

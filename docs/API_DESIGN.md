@@ -6,6 +6,8 @@ The FastAPI backend is the only API surface the Streamlit frontend uses. The fro
 
 The API currently supports:
 
+- authentication and JWT-backed identity
+- role-based access control
 - employee record management
 - onboarding workflow execution
 - task lifecycle management
@@ -32,6 +34,23 @@ Streamlit Cloud should set `API_BASE_URL` to the deployed Render backend URL.
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Backend health check |
+
+### Auth
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| `POST` | `/auth/register` | Create user and return JWT |
+| `POST` | `/auth/login` | Authenticate user and return JWT |
+| `GET` | `/auth/me` | Return authenticated user |
+
+Roles:
+
+```text
+employee
+manager
+hr_admin
+admin
+```
 
 ### Employees
 
@@ -100,7 +119,7 @@ Workflow run IDs are normalized before lookup, so lowercase path values still re
 | `POST` | `/assistant/chat` | Ask the onboarding assistant using approved knowledge and optional employee workflow context |
 | `POST` | `/assistant/knowledge/reindex` | Rebuild the approved knowledge chunk and embedding index |
 
-The assistant accepts a stakeholder role of `Employee`, `Manager`, `HR`, `IT`, or `Security`. Unknown roles fall back to `Employee`. The current implementation uses approved local knowledge files, deterministic hashed embeddings, PostgreSQL-backed knowledge chunks, optional employee workflow context, source citations, confidence scoring, and escalation behavior. RBAC enforcement, external embedding providers, and external integrations are roadmap-only.
+The assistant uses the authenticated user's backend role. It does not trust a `user_role` value from the request body. The current implementation uses approved local knowledge files, deterministic hashed embeddings, PostgreSQL-backed knowledge chunks, optional employee workflow context, source citations, confidence scoring, and escalation behavior. External embedding providers and external integrations are roadmap-only.
 
 ## Important Response Shapes
 
@@ -184,7 +203,6 @@ Request:
 ```json
 {
   "question": "What should I do if laptop access is locked?",
-  "user_role": "IT",
   "employee_id": "EMP_12345678"
 }
 ```
@@ -249,7 +267,6 @@ These are roadmap items and should not be documented as active API endpoints:
 - `GET /audit-logs`
 - `GET /agent-runs`
 - `GET /employees/{employee_id}/agent-runs`
-- authentication or role-based access endpoints
 - notification endpoints
 - chat, calendar, email, or HRMS integration endpoints
 - external embedding provider endpoints

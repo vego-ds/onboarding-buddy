@@ -39,6 +39,13 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - Input safety classification before retrieval or LLM synthesis
 - XML isolation for untrusted RAG/tool context
 - Final response inspection for PII and prompt exfiltration
+- Phase 4 authentication foundation
+- User registration, login, and `/auth/me`
+- JWT bearer tokens
+- Password hashing with PBKDF2
+- RBAC roles: `employee`, `manager`, `hr_admin`, `admin`
+- Protected employee, task, approval, workflow, assistant, and knowledge-index APIs
+- Assistant role derived from authenticated user identity
 - Tests covering Phase 2 behavior and Phase 3 assistant/RAG behavior
 
 ## Roadmap Only
@@ -48,8 +55,6 @@ The project is intentionally scoped as a controlled workflow orchestration proto
 - pgvector or managed vector database upgrade
 - RAG evaluation benchmark suite
 - Email or Slack notifications
-- Authentication and authorization
-- RBAC enforcement
 - Calendar, chat, and HRMS integrations
 - Advanced audit dashboard
 - Alembic migrations
@@ -105,6 +110,9 @@ The frontend never calls agents directly. It calls FastAPI endpoints, and the ba
 | Method | Endpoint | Purpose |
 | --- | --- | --- |
 | `GET` | `/health` | Backend health check |
+| `POST` | `/auth/register` | Create a user and return JWT |
+| `POST` | `/auth/login` | Authenticate user and return JWT |
+| `GET` | `/auth/me` | Return authenticated user |
 | `GET` | `/employees` | List employee records |
 | `POST` | `/employees` | Create employee onboarding record |
 | `GET` | `/employees/{employee_id}` | Get one employee |
@@ -210,7 +218,30 @@ http://127.0.0.1:8000
 
 Phase 3A strengthened the assistant with answer guardrails, citations, confidence scoring, escalation behavior, and tests. Phase 3B adds a vector-RAG foundation using approved local knowledge chunks, deterministic hashed embeddings, PostgreSQL-backed `knowledge_chunks`, and cosine retrieval.
 
-It is not yet a production security boundary, authentication layer, Slack/email/calendar integration, HRMS integration, external embedding pipeline, or managed vector database deployment.
+It is not yet an enterprise SSO system, Slack/email/calendar integration, HRMS integration, external embedding pipeline, or managed vector database deployment.
+
+## Authentication And RBAC
+
+Phase 4 adds a real user identity layer. Protected API calls require a Bearer token from `/auth/login` or `/auth/register`.
+
+Roles:
+
+```text
+employee
+manager
+hr_admin
+admin
+```
+
+Access model:
+
+- employees can access their linked employee onboarding record
+- managers can access direct reports linked through `manager_id`
+- HR admins and admins can access all onboarding records and workflow operations
+- only HR admins and admins can reindex assistant knowledge
+- the assistant uses the authenticated user's role from the JWT-backed user record, not request-body role text
+
+Production note: replace the development `JWT_SECRET` with a long random secret in every deployed environment.
 
 ## Migration Note
 

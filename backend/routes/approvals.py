@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from backend.security.auth import require_roles
 from database.repositories.approval_repository import (
     get_approval_by_id,
     get_approvals,
@@ -14,6 +15,7 @@ router = APIRouter(prefix="/approvals", tags=["Approvals"])
 def list_approvals(
     employee_id: str | None = None,
     approval_status: str | None = Query(default=None),
+    current_user=Depends(require_roles("hr_admin", "admin")),
 ):
     approvals = get_approvals(
         employee_id=employee_id,
@@ -27,7 +29,10 @@ def list_approvals(
 
 
 @router.get("/{approval_id}")
-def get_approval(approval_id: str):
+def get_approval(
+    approval_id: str,
+    current_user=Depends(require_roles("hr_admin", "admin")),
+):
     approval = get_approval_by_id(approval_id)
 
     if approval is None:
@@ -40,6 +45,7 @@ def get_approval(approval_id: str):
 def submit_approval_decision(
     approval_id: str,
     decision: ApprovalDecisionRequest,
+    current_user=Depends(require_roles("hr_admin", "admin")),
 ):
     try:
         approval = update_approval_decision(

@@ -15,8 +15,9 @@ streamlit run frontend/app.py
 ## Recording Flow
 
 1. Open the Streamlit app.
-2. Show dashboard metrics and API status.
-3. Create a new employee.
+2. Register or log in.
+3. Show dashboard metrics and API status.
+4. Create a new employee.
 4. Confirm the employee appears in Recent Employees and Directory.
 5. Generate an onboarding plan for that employee.
 6. Show the returned `workflow_run_id`.
@@ -57,7 +58,7 @@ The demo should not claim these are implemented:
 - external embedding provider integration
 - pgvector or managed vector database migration
 - real email or Slack notifications
-- authentication and authorization
-- RBAC enforcement
+- enterprise SSO
+- multi-tenant organization isolation
 - background workers
 - Alembic migrations

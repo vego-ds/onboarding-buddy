@@ -40,6 +40,9 @@ Phase 3 adds a constrained onboarding assistant that answers questions from appr
 - Answer guardrails, citations, confidence scoring, and escalation behavior
 - Deterministic local embeddings and vector-style retrieval
 - PostgreSQL-backed `knowledge_chunks` index
+- Authentication and RBAC foundation
+- JWT-backed user identity
+- Assistant role derived from authenticated backend user
 - pytest coverage for agents, repositories, route behavior, and database configuration
 
 ## Scope Discipline
@@ -55,6 +58,7 @@ Implemented now:
 - operations dashboard
 - onboarding assistant foundation
 - vector-RAG foundation over approved knowledge chunks
+- authentication and RBAC foundation
 
 Roadmap only:
 
@@ -62,12 +66,12 @@ Roadmap only:
 - external embedding provider integration
 - pgvector or managed vector database migration
 - email or Slack notifications
-- authentication and authorization
-- RBAC enforcement
+- enterprise SSO
+- multi-tenant organization isolation
 - Alembic migrations
 - background workers
 - production observability stack
 
 ## Outcome
 
-The project has moved from an AI planning demo into a credible workflow orchestration MVP, and Phase 3 now includes a controlled assistant plus vector-RAG foundation. The next production milestones are RBAC, migrations, external embedding evaluation, and deployment verification against live PostgreSQL.
+The project has moved from an AI planning demo into a credible workflow orchestration MVP. Phase 3 adds a controlled assistant plus vector-RAG foundation, and Phase 4 adds real user identity and RBAC. The next production milestones are migrations, enterprise SSO, external embedding evaluation, and deployment verification against live PostgreSQL.

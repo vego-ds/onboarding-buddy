@@ -28,6 +28,12 @@ MIN_CONFIDENCE_FOR_SYNTHESIS = 0.24
 
 SUPPORTED_ROLES = {"Employee", "Manager", "HR", "IT", "Security"}
 ROLE_LOOKUP = {role.lower(): role for role in SUPPORTED_ROLES}
+AUTH_ROLE_TO_ASSISTANT_ROLE = {
+    "employee": "Employee",
+    "manager": "Manager",
+    "hr_admin": "HR",
+    "admin": "HR",
+}
 ROLE_SCOPE = {
     "Employee": "employee-facing onboarding tasks, policies, forms, blockers, and next steps",
     "Manager": "team onboarding progress, buddy assignment, role expectations, and blockers",
@@ -39,6 +45,8 @@ ROLE_SCOPE = {
 
 def normalize_role(user_role):
     normalized = str(user_role or "Employee").strip().lower()
+    if normalized in AUTH_ROLE_TO_ASSISTANT_ROLE:
+        return AUTH_ROLE_TO_ASSISTANT_ROLE[normalized]
     return ROLE_LOOKUP.get(normalized, "Employee")
 
 
@@ -427,7 +435,12 @@ Approved knowledge and workflow context are isolated below:
     return call_openrouter(system_prompt=system_prompt, user_prompt=user_prompt)
 
 
-def answer_onboarding_question(question, user_role="Employee", employee_id=None):
+def answer_onboarding_question(
+    question,
+    user_role="Employee",
+    employee_id=None,
+    current_user=None,
+):
     input_decision = classify_input_safety(question)
     if not input_decision.allowed:
         return {
@@ -520,6 +533,13 @@ def answer_onboarding_question(question, user_role="Employee", employee_id=None)
     return {
         "answer": answer,
         "user_role": role,
+        "authenticated_user": {
+            "user_id": current_user.get("user_id"),
+            "role": current_user.get("role"),
+            "email": current_user.get("email"),
+        }
+        if current_user
+        else None,
         "confidence_score": confidence,
         "confidence_label": label,
         "needs_escalation": needs_escalation,

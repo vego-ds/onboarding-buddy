@@ -1,7 +1,13 @@
 from collections import Counter
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 
+from backend.security.auth import (
+    assert_employee_access,
+    get_current_user,
+    is_hr_or_admin,
+    require_roles,
+)
 from backend.services_workflow import run_onboarding_workflow_for_employee
 from database.db import get_integrity_error_classes, is_duplicate_email_error
 from database.repositories.employee_repository import (
@@ -13,13 +19,17 @@ from database.repositories.employee_repository import (
 from database.repositories.approval_repository import get_approvals
 from database.repositories.audit_repository import create_audit_log, get_audit_logs
 from database.repositories.task_repository import get_tasks_by_employee_id
+from database.repositories.user_repository import list_users_by_manager_id
 from schemas.employee import EmployeeCreateRequest, EmployeeUpdateRequest
 
 router = APIRouter(prefix="/employees", tags=["Employees"])
 
 
 @router.post("")
-def create_employee_record(employee: EmployeeCreateRequest):
+def create_employee_record(
+    employee: EmployeeCreateRequest,
+    current_user=Depends(require_roles("hr_admin", "admin")),
+):
     try:
         created_employee = create_employee(employee)
         return {
@@ -41,8 +51,25 @@ def create_employee_record(employee: EmployeeCreateRequest):
 
 
 @router.get("")
-def get_employees(limit: int = Query(default=25, ge=1, le=100)):
-    employees = list_employees(limit=limit)
+def get_employees(
+    limit: int = Query(default=25, ge=1, le=100),
+    current_user=Depends(get_current_user),
+):
+    if is_hr_or_admin(current_user):
+        employees = list_employees(limit=limit)
+    elif current_user["role"] == "employee" and current_user.get("employee_id"):
+        employee = get_employee_by_id(current_user["employee_id"])
+        employees = [employee] if employee else []
+    elif current_user["role"] == "manager":
+        employees = []
+        for user in list_users_by_manager_id(current_user["user_id"]):
+            if user.get("employee_id"):
+                employee = get_employee_by_id(user["employee_id"])
+                if employee:
+                    employees.append(employee)
+        employees = employees[:limit]
+    else:
+        employees = []
 
     return {
         "employee_count": len(employees),
@@ -51,7 +78,8 @@ def get_employees(limit: int = Query(default=25, ge=1, le=100)):
 
 
 @router.get("/{employee_id}")
-def get_employee(employee_id: str):
+def get_employee(employee_id: str, current_user=Depends(get_current_user)):
+    assert_employee_access(current_user, employee_id)
     employee = get_employee_by_id(employee_id)
 
     if employee is None:
@@ -61,7 +89,11 @@ def get_employee(employee_id: str):
 
 
 @router.put("/{employee_id}")
-def update_employee_record(employee_id: str, employee: EmployeeUpdateRequest):
+def update_employee_record(
+    employee_id: str,
+    employee: EmployeeUpdateRequest,
+    current_user=Depends(require_roles("hr_admin", "admin")),
+):
     try:
         updated_employee = update_employee(employee_id, employee)
 
@@ -91,7 +123,8 @@ def update_employee_record(employee_id: str, employee: EmployeeUpdateRequest):
 
 
 @router.get("/{employee_id}/tasks")
-def get_employee_tasks(employee_id: str):
+def get_employee_tasks(employee_id: str, current_user=Depends(get_current_user)):
+    assert_employee_access(current_user, employee_id)
     employee = get_employee_by_id(employee_id)
 
     if employee is None:
@@ -120,7 +153,8 @@ def get_employee_tasks(employee_id: str):
 
 
 @router.get("/{employee_id}/timeline")
-def get_employee_timeline(employee_id: str):
+def get_employee_timeline(employee_id: str, current_user=Depends(get_current_user)):
+    assert_employee_access(current_user, employee_id)
     employee = get_employee_by_id(employee_id)
 
     if employee is None:
@@ -136,7 +170,10 @@ def get_employee_timeline(employee_id: str):
 
 
 @router.post("/{employee_id}/generate-onboarding-plan")
-def generate_onboarding_plan(employee_id: str):
+def generate_onboarding_plan(employee_id: str, current_user=Depends(get_current_user)):
+    if current_user["role"] not in {"manager", "hr_admin", "admin"}:
+        raise HTTPException(status_code=403, detail="Insufficient permissions.")
+    assert_employee_access(current_user, employee_id)
     final_state = run_onboarding_workflow_for_employee(employee_id)
 
     if final_state is None:

@@ -329,10 +329,17 @@ def test_assistant_route_rejects_empty_question():
 def test_assistant_route_delegates_chat_request(monkeypatch):
     calls = {}
 
-    def fake_answer(question, user_role="Employee", employee_id=None):
+    current_user = {
+        "user_id": "USER_HR",
+        "email": "hr@example.com",
+        "role": "hr_admin",
+    }
+
+    def fake_answer(question, user_role="Employee", employee_id=None, current_user=None):
         calls["question"] = question
         calls["user_role"] = user_role
         calls["employee_id"] = employee_id
+        calls["current_user_role"] = current_user["role"]
         return {"answer": "done"}
 
     monkeypatch.setattr(assistant_route, "answer_onboarding_question", fake_answer)
@@ -342,12 +349,13 @@ def test_assistant_route_delegates_chat_request(monkeypatch):
         user_role="HR",
         employee_id="EMP_12345678",
     )
-    response = assistant_route.chat_with_assistant(request)
+    response = assistant_route.chat_with_assistant(request, current_user=current_user)
 
     assert calls == {
         "question": "What is next?",
-        "user_role": "HR",
+        "user_role": "hr_admin",
         "employee_id": "EMP_12345678",
+        "current_user_role": "hr_admin",
     }
     assert response == {"answer": "done"}
 
